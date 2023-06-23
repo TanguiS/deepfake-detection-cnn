@@ -1,0 +1,34 @@
+import math
+from pathlib import Path
+from typing import List
+
+import cv2
+import numpy as np
+from numpy import ndarray
+from tqdm import tqdm
+
+from bench.extract.face import FaceDetectorResult
+from bench.extract.face.FaceDetectorResult import face_detection_single_frame
+from bench.extract.face.face_align import norm_crop, rezize_from_max_length
+from bench.extract.face.yunet import YuNet
+
+
+def pre_processing_image(
+        detection_result: FaceDetectorResult,
+        source_image: ndarray,
+        ratio_value: float = 1.0,
+        max_shape: int = 112
+) -> ndarray:
+    landmarks_reshaped = np.array(detection_result.landmarks / ratio_value).reshape(5, 2)
+    cropped_image = norm_crop(source_image, landmarks_reshaped, image_size=max_shape, mode='arcface')
+    return cropped_image
+
+
+def extract_face(image_path: Path, face_detector_model: YuNet, max_shape: int = 112) -> ndarray:
+    image_cv2_probe = cv2.imread(str(image_path))
+    image_cv2_probe_resized, ratio_value_probe = rezize_from_max_length(image_cv2_probe, max_shape)
+    face_detection: FaceDetectorResult = face_detection_single_frame(image_cv2_probe_resized, face_detector_model)
+    return pre_processing_image(face_detection, image_cv2_probe, ratio_value_probe, max_shape)
+
+
+

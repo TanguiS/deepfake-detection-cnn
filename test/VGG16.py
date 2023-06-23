@@ -1,9 +1,8 @@
-from typing import Tuple
-
 import plaidml.keras
 
 plaidml.keras.install_backend()
 
+from typing import Tuple
 from keras.models import Sequential
 from keras.layers import Dense, Conv2D, MaxPool2D, Flatten, Dropout, GlobalAveragePooling2D
 
