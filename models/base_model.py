@@ -59,7 +59,7 @@ class ModelBase(ABC):
         if self.__first_run:
             model_name = model_first_run_choose_name()
             self.__model_full_name = new_model_format(self.__model_arch, model_name, self.__input_shape)
-            self.__model_path = None
+            self.__model_path = self.workspace_path.joinpath(self.__model_full_name + ".hdf5")
 
     @abstractmethod
     def show_summary(self) -> None:
@@ -76,28 +76,24 @@ class ModelBase(ABC):
             self.__optimizer = d['optimizer']
 
     @abstractmethod
-    def model(self) -> Optional[Union[keras.Model, keras.Sequential]]:
+    def keras_model(self) -> Optional[Union[keras.Model, keras.Sequential]]:
         return None
 
     @property
-    def model_hdf5_file_path(self) -> Path:
+    def keras_model_path(self) -> Path:
         return self.__model_path
 
     @property
-    def workspace(self) -> Path:
+    def workspace_path(self) -> Path:
         return self.__models_dir.joinpath(self.__model_arch)
 
     @property
-    def shape(self) -> Tuple[int , int, int]:
+    def input_shape(self) -> Tuple[int , int, int]:
         return self.__input_shape
 
     @property
     def models_dir(self) -> Union[Path, any]:
         return self.__models_dir
-
-    @property
-    def model_name_with_hdf5(self) -> str:
-        return self.__model_full_name + ".hdf5"
 
     @property
     def log(self):
@@ -149,26 +145,31 @@ def choose_models(available_models: Dict[int, str], model_dir: Path) -> Optional
     if not available_models:
         return None
 
-    logger = Logger.get_instance()
+    log = Logger()
 
-    logger.info(" -- Choose a Model --")
+    log.info(" -- Choose a Model --")
     for index, name in available_models.items():
-        logger.info(f"  -> [{index}]: {name}")
+        log.info(f"  -> [{index}]: {name}")
 
     default_choice = 0
-    logger.info(f"Enter your models index choice (default: {default_choice})")
-    user_input = input()
+    log.info(f"Enter your models index choice (default: {default_choice}), enter -1 to create a new model")
+    user_input = input(" > ")
 
     try:
         choice = int(user_input)
     except ValueError as e:
-        logger.err(e)
-        logger.info(f"New models selected, name : {user_input}.")
-        choice = user_input
+        log.err(str(e))
+        log.info(f"New models selected, name : {user_input}.")
+        log.info("Choice not an integer. Using default choice.")
+        log.err("Choice not an integer. Using default choice.")
+        choice = default_choice
+
+    if choice == -1:
+        return None
 
     if choice < 0 or choice >= len(available_models):
-        logger.info("Choice out of range. Using default choice.")
-        logger.err("Choice out of range. Using default choice.")
+        log.info("Choice out of range. Using default choice.")
+        log.err("Choice out of range. Using default choice.")
         choice = default_choice
 
     selected_model = available_models[choice]
@@ -178,10 +179,10 @@ def choose_models(available_models: Dict[int, str], model_dir: Path) -> Optional
 
 
 def model_first_run_choose_name() -> str:
-    logger = Logger()
+    log = Logger()
 
     default_choice = "deepfake-detection"
-    logger.info(" -- First Time: Choose a model name --")
-    logger.info(f"Enter your model name (default: {default_choice}) ")
+    log.info(" -- First Time: Choose a model name --")
+    log.info(f"Enter your model name (default: {default_choice}) ")
     user_input = input(" > ")
     return user_input

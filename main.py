@@ -12,9 +12,8 @@ from data.DataLoader import DataLoader
 
 if __name__ == '__main__':
 
-    subjects = Path('D:\\storage-photos\\subjects')
-    df = Path('D:\\storage-photos\\subjects\\dataframe.pkl')
-    backup = Path('D:\\backup\\deepfake_pickle')
+    subjects = Path('C:\\WORK\\subjects')
+    df = Path('C:\\WORK\\subjects\\dataframe.pkl')
     models_dir = Path('C:\\WORK\\deepfake-detection-cnn\\log')
 
     shape = (32, 32, 3)

@@ -19,7 +19,8 @@ class Trainer:
         self.__setup_callbacks()
 
     def __setup_callbacks(self):
-        filepath = self.__model.workspace.joinpath(self.__model.model_name_with_hdf5)
+        model_name = self.__model.keras_model_path.stem
+        filepath = self.__model.workspace_path.joinpath(model_name)
         optimizer_callback = ModelStateCheckpoint(filepath=filepath)
         progress_bar = TrainingProgressBar()
         early_stop = CustomEarlyStopping(
@@ -36,14 +37,14 @@ class Trainer:
             factor=0.1,
             min_lr=0.000000001
         )
-        filepath = self.__model.workspace.joinpath("train_history.csv")
+        filepath = self.__model.workspace_path.joinpath("train_history.csv")
         append = True
         if not filepath.exists():
             append = False
         if self.__model.is_first_run() and filepath.exists():
             append = False
         train_csv_save = CustomCSVLogger(filepath, separator=';', append=append)
-        filepath = self.__model.workspace.joinpath("val_history.csv")
+        filepath = self.__model.workspace_path.joinpath("val_history.csv")
         val_csv_save = CustomCSVLogger(filepath, separator=';', append=append, monitor_val=True)
 
         self.__callbacks = CallbackList(
@@ -53,7 +54,7 @@ class Trainer:
     def run(self, max_epochs: int = 10):
         self.__model.compile()
 
-        self.__model.model().fit_generator(
+        self.__model.keras_model().fit_generator(
             self.__train_data,
             steps_per_epoch=self.__train_data.samples // self.__batch_size,
             validation_data=self.__val_data,
@@ -65,5 +66,5 @@ class Trainer:
         )
 
         test_steps = self.__test_data.samples // self.__batch_size
-        results = self.__model.model().evaluate_generator(self.__test_data, steps=test_steps, verbose=1)
+        results = self.__model.keras_model().evaluate_generator(self.__test_data, steps=test_steps, verbose=1)
         self.__log.info(results)

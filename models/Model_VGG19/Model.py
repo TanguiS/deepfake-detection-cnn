@@ -19,13 +19,13 @@ class VGG19(ModelBase, ABC):
         self.__setup()
 
     def __setup(self):
-        if self.model_hdf5_file_path and self.model_hdf5_file_path.exists():
-            self.__model = load_model(str(self.model_hdf5_file_path), compile=False)
+        if self.keras_model_path and self.keras_model_path.exists():
+            self.__model = load_model(str(self.keras_model_path), compile=False)
             return
         kwargs = {
             'include_top': True,
             'weights': None,
-            'input_shape': self.shape,
+            'input_shape': self.input_shape,
             'classes': 2
         }
         self.__model: keras.Model = vgg19.VGG19(**kwargs)
@@ -43,7 +43,7 @@ class VGG19(ModelBase, ABC):
                              optimizer=optimizers.Adam.from_config(self.optimizer),
                              metrics=['accuracy'])
 
-    def model(self) -> Optional[Union[keras.Model, keras.Sequential]]:
+    def keras_model(self) -> Optional[Union[keras.Model, keras.Sequential]]:
         return self.__model
 
 
