@@ -1,12 +1,11 @@
-import pickle
 from abc import ABC
 from pathlib import Path
 from typing import Optional, Tuple, Union
 
 import keras
-from keras import optimizers, layers
+from keras import optimizers
 from keras.applications import vgg19
-from keras.engine.saving import load_model
+from keras.models import load_model
 
 from models.base_model import ModelBase
 
@@ -20,8 +19,11 @@ class VGG19(ModelBase, ABC):
 
     def __setup(self):
         if self.keras_model_path and self.keras_model_path.exists():
+            self.log.info("Loading model...")
             self.__model = load_model(str(self.keras_model_path), compile=False)
+            self.log.info(" > Done")
             return
+        self.log.info("Creating model...")
         kwargs = {
             'include_top': True,
             'weights': None,
@@ -29,17 +31,21 @@ class VGG19(ModelBase, ABC):
             'classes': 2
         }
         self.__model: keras.Model = vgg19.VGG19(**kwargs)
+        self.log.info(" > Done")
 
     def show_summary(self) -> None:
         self.__model.summary(print_fn=self.log.info)
 
     def compile(self) -> None:
+        super().compile()
         if self.optimizer is None:
-            self.__model.compile(loss='binary_crossentropy',
+            self.log.info("Using new optimizer.")
+            self.__model.compile(loss='categorical_crossentropy',
                                  optimizer=optimizers.Adam(),
                                  metrics=['accuracy'])
             return
-        self.__model.compile(loss='binary_crossentropy',
+        self.log.info(f"Loading optimizer and previous state from {self.optimizer}")
+        self.__model.compile(loss='categorical_crossentropy',
                              optimizer=optimizers.Adam.from_config(self.optimizer),
                              metrics=['accuracy'])
 

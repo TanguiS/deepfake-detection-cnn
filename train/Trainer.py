@@ -1,4 +1,4 @@
-from keras.callbacks import CallbackList, CSVLogger
+from keras.callbacks import CallbackList
 
 from data.DataLoader import DataLoader
 from log_io.logger import Logger
@@ -19,8 +19,7 @@ class Trainer:
         self.__setup_callbacks()
 
     def __setup_callbacks(self):
-        model_name = self.__model.keras_model_path.stem
-        filepath = self.__model.workspace_path.joinpath(model_name)
+        filepath = self.__model.keras_model_path
         optimizer_callback = ModelStateCheckpoint(filepath=filepath)
         progress_bar = TrainingProgressBar()
         early_stop = CustomEarlyStopping(
@@ -54,6 +53,15 @@ class Trainer:
     def run(self, max_epochs: int = 10):
         self.__model.compile()
 
+        if self.__model.start_epoch >= max_epochs:
+            self.__log.err(f"Error: start_epoch[{self.__model.start_epoch}] >= max_epoch[{max_epochs}].")
+            raise ValueError
+
+        if self.__model.start_epoch > 0 and not self.__model.is_first_run():
+            self.__log.info(f"Resume training, starting at {self.__model.start_epoch} epoch to {max_epochs}.")
+        else:
+            self.__log.info(f"Starting training from scratch to {max_epochs} epochs.")
+
         self.__model.keras_model().fit_generator(
             self.__train_data,
             steps_per_epoch=self.__train_data.samples // self.__batch_size,
@@ -65,6 +73,11 @@ class Trainer:
             verbose=0
         )
 
+        self.__log.info(f"TRAINING Done: Saving model without Optimizer to {self.__model.keras_model_path.name}...")
+        self.__model.keras_model().save(str(self.__model.keras_model_path), include_optimizer=False)
+        self.__log.info(" > Saved")
+
+        self.__log.info("Testing model on Test generator.")
         test_steps = self.__test_data.samples // self.__batch_size
         results = self.__model.keras_model().evaluate_generator(self.__test_data, steps=test_steps, verbose=1)
-        self.__log.info(results)
+        self.__log.info(f"Results of tests : {results}")

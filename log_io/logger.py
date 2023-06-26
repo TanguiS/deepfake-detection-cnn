@@ -10,9 +10,9 @@ def message_format(message):
     return log_message
 
 
-def print_log(message: str, end: str) -> str:
+def print_log(message: str) -> str:
     log_message = message_format(message)
-    print(log_message, end=end)
+    print(log_message)
     return log_message
 
 
@@ -50,8 +50,8 @@ class Logger(metaclass=SingletonMeta):
             self.__log_error.touch()
             self.__log_info.touch()
 
-    def info(self, message: str, end: str = '\n') -> None:
-        log_message = print_log(message, end)
+    def info(self, message: str) -> None:
+        log_message = print_log(message)
         write_log(self.__log_info, log_message)
 
     def info_file(self, message: str) -> None:

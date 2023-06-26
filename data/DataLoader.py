@@ -1,11 +1,11 @@
 import plaidml.keras
-
+from pandas import DataFrame
 
 plaidml.keras.install_backend()
 
 from log_io.logger import Logger
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Optional
 
 import pandas as pd
 
@@ -14,10 +14,21 @@ from keras_preprocessing.image import DataFrameIterator
 
 
 class DataLoader:
-    def __init__(self, videos_root_dir: Path, dataframe_pickle: Path, shape: int, batch_size: int = 32) -> None:
+    def __init__(
+            self,
+            videos_root_dir: Path,
+            dataframe_pickle: Path,
+            shape: int,
+            save_dir: Path,
+            batch_size: int = 32
+    ) -> None:
         super().__init__()
         self.__shape = shape
         self.__log = Logger()
+        self.__save_dir = save_dir
+        self.__DF_TRAIN_PATH = self.__save_dir.joinpath("train_dataframe.pkl")
+        self.__DF_VAL_PATH = self.__save_dir.joinpath("validation_dataframe.pkl")
+        self.__DF_TEST_PATH = self.__save_dir.joinpath("test_dataframe.pkl")
 
         self.__train_generator, self.__val_generator, self.__test_generator = self.__load_dataset(
             dataframe_pickle,
@@ -33,6 +44,9 @@ class DataLoader:
     ) -> Tuple[DataFrameIterator, DataFrameIterator, DataFrameIterator]:
         if not dataframe_pickle.exists() and dataframe_pickle.is_file():
             raise FileNotFoundError(f"Error with dataframe arg : {dataframe_pickle} does not exists, or not a file.")
+
+        self.__log.info(f"Loading datas from : {dataframe_pickle}")
+
         dataframe: pd.DataFrame = pd.read_pickle(dataframe_pickle)
         dataframe['index_col'] = dataframe.index
         dataframe['index_col'] = dataframe.index.astype(str)
@@ -74,6 +88,22 @@ class DataLoader:
         )
 
         return train, val, test
+
+    def __save_dataframes(self, df_train: DataFrame, df_val: DataFrame, df_test: DataFrame):
+        self.__log.info(f"Saving Dataframe for reproducibility to : {self.__save_dir}")
+        self.__save_dir.mkdir(parents=True, exist_ok=True)
+        if self.__DF_TRAIN_PATH.exists():
+            self.__DF_TRAIN_PATH.unlink()
+        if self.__DF_VAL_PATH.exists():
+            self.__DF_VAL_PATH.unlink()
+        if self.__DF_TEST_PATH.exists():
+            self.__DF_TEST_PATH.unlink()
+        df_train.to_pickle(str(self.__DF_TRAIN_PATH))
+        df_val.to_pickle(str(self.__DF_VAL_PATH))
+        df_test.to_pickle(str(self.__DF_TEST_PATH))
+
+    def __load_dataframes(self) -> Optional[Tuple[DataFrame, DataFrame, DataFrame]]:
+        pass
 
     def summary(self):
         for generator, name in (

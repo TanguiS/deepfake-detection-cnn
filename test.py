@@ -2,13 +2,13 @@ from pathlib import Path
 from bench.Evaluation import ModelEvaluator, decode_prediction
 from bench.extract.face.FaceDetectorResult import load_face_detection_model
 
-model_path = Path('C:\\WORK\\deepfake-detection-cnn\\log\\VGG16_deepfake-detection_02.h5')
+model_path = Path('C:\\WORK\\deepfake-detection-cnn\\log\\VGG19\\VGG19_test1_32_3.h5')
 img_path_fake = Path('D:\\storage-photos\\benchmark\\p384dfudt\\1000\\00090.png')
 img_path_real = Path('D:\\storage-photos\\benchmark\\reference_face.png')
 
 yunet_model = Path('C:\\WORK\\model')
 
-shape = (128, 128)
+shape = (32, 32)
 
 face_detector = load_face_detection_model(yunet_model, input_size=shape)
 

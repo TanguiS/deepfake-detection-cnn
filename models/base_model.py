@@ -10,7 +10,7 @@ from log_io import logger
 from log_io.logger import Logger
 
 
-# Model name format : {models arch}_{model_name}_{dim: xy_channel}_{reached_nb_epoch}.*
+# Model name format : {models arch}_{model_name}_{dim: xy_channel}.*
 
 class ModelBase(ABC):
     def __init__(self, models_dir: Path, model_arch: str, input_shape: Tuple[int, int, int], nb_epoch: int,
@@ -59,7 +59,7 @@ class ModelBase(ABC):
         if self.__first_run:
             model_name = model_first_run_choose_name()
             self.__model_full_name = new_model_format(self.__model_arch, model_name, self.__input_shape)
-            self.__model_path = self.workspace_path.joinpath(self.__model_full_name + ".hdf5")
+            self.__model_path = self.workspace_path.joinpath(self.__model_full_name + ".h5")
 
     @abstractmethod
     def show_summary(self) -> None:
@@ -67,9 +67,9 @@ class ModelBase(ABC):
 
     @abstractmethod
     def compile(self) -> None:
-        pkl_checkpoint = self.__model_path.joinpath(self.__model_full_name + ".pkl")
-        if pkl_checkpoint is None:
-            pass
+        pkl_checkpoint = self.keras_model_path.with_suffix('.pkl')
+        if not pkl_checkpoint.exists():
+            return
         with open(pkl_checkpoint, 'rb') as f:
             d = pickle.load(f)
             self.__current_epoch = d['epoch']
@@ -117,27 +117,28 @@ def new_model_format(model_arch: str, model_name: str, input_shape: Tuple[int, i
 
 def model_name_from_path(model_path: Path) -> str:
     model_stem = model_path.stem
-    arch, name, shape, nb_epoch = decode_model_name(model_stem)
+    arch, name, shape = decode_model_name(model_stem)
     model_name = new_model_format(arch, name, shape)
     return model_name
 
 
-def decode_model_name(model_name_stem: str) -> Tuple[str, str, Tuple[int, int, int], int]:
+def decode_model_name(model_name_stem: str) -> Tuple[str, str, Tuple[int, int, int]]:
     split = model_name_stem.split("_")
     arch = split[0]
-    nb_epoch = int(split[-1])
-    str_split_dim = split[-3:-2]
+    str_split_dim = [split[-2], split[-1]]
     shape = (int(str_split_dim[0]), int(str_split_dim[0]), int(str_split_dim[1]))
     name = "_".join(split[1:-2])
-    return arch, name, shape, nb_epoch
+    return arch, name, shape
 
 
 def find_models(model_dir: Path, model_arch: str) -> Dict[int, str]:
     models = dict()
-    for index, name in enumerate(model_dir.rglob(f"{model_arch}*")):
-        if name.is_dir():
+    curr_index = 0
+    for name in model_dir.rglob(f"{model_arch}*"):
+        if not name.exists() or name.is_dir() or name.suffix != ".h5":
             continue
-        models[index] = name.stem
+        models[curr_index] = name.stem
+        curr_index += 1
     return models
 
 

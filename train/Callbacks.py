@@ -1,43 +1,44 @@
 import csv
-import io
-import os
 import pickle
+import sys
+from io import StringIO
 from pathlib import Path
-from typing import Union, Iterable, OrderedDict
+from typing import Union
 
-import numpy as np
-import six
 from keras import Model
 from keras.callbacks import ModelCheckpoint, Callback, EarlyStopping, ReduceLROnPlateau
 from tqdm import tqdm
 
 from log_io.logger import Logger
-import sys
-from io import StringIO
 
 
-class ModelStateCheckpoint(ModelCheckpoint):
+class ModelStateCheckpoint(Callback):
 
-    def __init__(self, filepath: Path, monitor='val_loss', verbose=0, save_best_only=False, save_weights_only=False,
-                 mode='auto', period=1):
+    def __init__(self, filepath: Path):
+        super().__init__()
         self.__log = Logger()
         self.__log.info(f"Saving model to : {filepath}")
-        super().__init__(str(filepath), monitor, verbose, save_best_only, save_weights_only, mode, period)
         self.__filepath = filepath
         self.model: Model = self.model
 
     def on_epoch_end(self, epoch, logs=None):
         super().on_epoch_end(epoch, logs)
+        self.__log.info(f"\n Epoch: {epoch + 1} saving status")
+        self.__log.info(f"Saving model: {self.__filepath.name}...")
+        self.model.save(str(self.__filepath), include_optimizer=False)
+        self.__log.info("Saved")
 
         pkl = self.__filepath.with_suffix('.pkl')
 
+        self.__log.info(f"Saving optimizer: {pkl.name}...")
         with open(pkl, 'wb') as f:
             pickle.dump(
                 {
                     'optimizer': self.model.optimizer.get_config(),
                     'epoch': epoch + 1
                 }, f, protocol=pickle.HIGHEST_PROTOCOL)
-        self.__log.info(f"\nEpoch: {epoch + 1}, saving optimize to {pkl}")
+        self.__log.info("Saved")
+        a = 0
 
 
 class TrainingProgressBar(Callback):
@@ -73,15 +74,16 @@ class TrainingProgressBar(Callback):
         super().on_epoch_end(epoch, logs)
         self.__metrics_progress(logs)
         self.__progress_bar.close()
+        self.__log.info("Epoch completed.")
 
     def on_batch_begin(self, batch, logs=None):
         super().on_batch_begin(batch, logs)
 
     def on_batch_end(self, batch, logs=None):
         super().on_batch_end(batch, logs)
-        self.__progress_bar.update()
         self.__current_batch += 1
         self.__metrics_progress(logs)
+        self.__progress_bar.update()
 
     def __metrics_progress(self, logs):
         metrics_str = "["
@@ -91,7 +93,7 @@ class TrainingProgressBar(Callback):
         self.__log.info_file(
             f"Progress: [{self.__current_epoch + 1}/{self.__epochs}]: {self.__current_batch}/{self.__total_batches}"
         )
-        self.__log.info(metrics_str, end='\r')
+        self.__log.info(metrics_str)
 
 
 class CustomEarlyStopping(EarlyStopping):
@@ -146,7 +148,7 @@ class CustomCSVLogger(Callback):
         self.filename = filename
         self.append = append
         self.monitor_val = monitor_val
-        self.data_monitor = ['loss', 'acc'] if not monitor_val else ['val_loss', 'val_acc']
+        self.data_monitor = ['loss', 'acc'] if not monitor_val else ['val_loss', 'val_acc', 'lr']
         self.init_header = ['epoch', 'batch', 'scaled_batch'] if not monitor_val else ['epoch']
 
     def on_epoch_begin(self, epoch, logs=None):
@@ -174,7 +176,7 @@ class CustomCSVLogger(Callback):
             self.csv_file.flush()
 
     def on_batch_end(self, batch, logs=None):
-        row = [self.epoch, batch, batch / self.__total_batches]
+        row = [self.epoch, batch, (batch / self.__total_batches) + (self.epoch - 1)]
         if not self.monitor_val:
             self.__save_metrics(logs, row)
 
