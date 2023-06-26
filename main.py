@@ -17,8 +17,8 @@ if __name__ == '__main__':
     models_dir = Path('C:\\WORK\\deepfake-detection-cnn\\log')
     df_save = Path('C:\\WORK\\deepfake-detection-cnn\\log\\df')
 
-    shape = (32, 32, 3)
-    batch_size = 1920
+    shape = (256, 256, 3)
+    batch_size = 32
 
     workspace = models_dir.joinpath('VGG19')
     workspace.mkdir(exist_ok=True)
@@ -39,4 +39,4 @@ if __name__ == '__main__':
 
     trainer = Trainer(model, data, batch_size)
 
-    trainer.run(2)
+    trainer.run(100)
