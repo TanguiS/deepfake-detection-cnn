@@ -15,6 +15,7 @@ if __name__ == '__main__':
     subjects = Path('C:\\WORK\\subjects')
     df = Path('C:\\WORK\\subjects\\dataframe.pkl')
     models_dir = Path('C:\\WORK\\deepfake-detection-cnn\\log')
+    df_save = Path('C:\\WORK\\deepfake-detection-cnn\\log\\df')
 
     shape = (32, 32, 3)
     batch_size = 1920
@@ -23,9 +24,7 @@ if __name__ == '__main__':
     workspace.mkdir(exist_ok=True)
     logger = Logger(workspace)
 
-    test = pd.read_pickle(df)
-
-    data = DataLoader(subjects, df, shape[0], batch_size)
+    data = DataLoader(subjects, df, shape[0], df_save, batch_size)
     data.summary()
 
     model: ModelBase = models.import_model('VGG19')(

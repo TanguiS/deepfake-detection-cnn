@@ -42,28 +42,21 @@ class DataLoader:
             videos_root_dir: Path,
             batch_size: int
     ) -> Tuple[DataFrameIterator, DataFrameIterator, DataFrameIterator]:
-        if not dataframe_pickle.exists() and dataframe_pickle.is_file():
-            raise FileNotFoundError(f"Error with dataframe arg : {dataframe_pickle} does not exists, or not a file.")
 
-        self.__log.info(f"Loading datas from : {dataframe_pickle}")
-
-        dataframe: pd.DataFrame = pd.read_pickle(dataframe_pickle)
-        dataframe['index_col'] = dataframe.index
-        dataframe['index_col'] = dataframe.index.astype(str)
-        dataframe['label'] = dataframe['label'].map({True: 'Fake', False: 'Real'})
-
-        test_dataframe = dataframe.sample(frac=0.1)
-        dataframe = dataframe.drop(test_dataframe.index)
-
-        evaluation_dataframe = dataframe.sample(frac=0.2)
-        dataframe = dataframe.drop(evaluation_dataframe.index)
+        dataframes = self.__load_dataframes()
+        if dataframes is None:
+            self.__log.info('Failed to load dataframes from the saving directory')
+            df_train, df_val, df_test = self.__initialize_dataframes(dataframe_pickle)
+            self.__save_dataframes(df_train, df_val, df_test)
+        else:
+            df_train, df_val, df_test = dataframes
 
         datagen = ImageDataGenerator(
             rescale=1. / 255
         )
 
         kwargs = {
-            'dataframe': dataframe,
+            'dataframe': df_train,
             'class_mode': 'categorical',
             'x_col': 'index_col',
             'y_col': 'label',
@@ -77,17 +70,32 @@ class DataLoader:
             **kwargs
         )
 
-        kwargs['dataframe'] = evaluation_dataframe
+        kwargs['dataframe'] = df_val
         val = datagen.flow_from_dataframe(
             **kwargs
         )
 
-        kwargs['dataframe'] = test_dataframe
+        kwargs['dataframe'] = df_test
         test = datagen.flow_from_dataframe(
             **kwargs
         )
 
         return train, val, test
+
+    def __initialize_dataframes(self, dataframe_pickle):
+        self.__log.info('Initializing and Loading dataframes.')
+        if not dataframe_pickle.exists() and dataframe_pickle.is_file():
+            raise FileNotFoundError(f"Error with dataframe arg : {dataframe_pickle} does not exists, or not a file.")
+        self.__log.info(f"Loading datas from : {dataframe_pickle}")
+        dataframe: pd.DataFrame = pd.read_pickle(dataframe_pickle)
+        dataframe['index_col'] = dataframe.index
+        dataframe['index_col'] = dataframe.index.astype(str)
+        dataframe['label'] = dataframe['label'].map({True: 'Fake', False: 'Real'})
+        test_dataframe = dataframe.sample(frac=0.1)
+        dataframe = dataframe.drop(test_dataframe.index)
+        evaluation_dataframe = dataframe.sample(frac=0.2)
+        dataframe = dataframe.drop(evaluation_dataframe.index)
+        return dataframe, evaluation_dataframe, test_dataframe
 
     def __save_dataframes(self, df_train: DataFrame, df_val: DataFrame, df_test: DataFrame):
         self.__log.info(f"Saving Dataframe for reproducibility to : {self.__save_dir}")
@@ -103,7 +111,17 @@ class DataLoader:
         df_test.to_pickle(str(self.__DF_TEST_PATH))
 
     def __load_dataframes(self) -> Optional[Tuple[DataFrame, DataFrame, DataFrame]]:
-        pass
+        self.__log.info(f'Trying to load dataframes from {self.__DF_TRAIN_PATH.parents}')
+        if not self.__DF_TRAIN_PATH.exists():
+            return None
+        if not self.__DF_VAL_PATH.exists():
+            return None
+        if not self.__DF_TEST_PATH.exists():
+            return None
+        df_train = pd.read_pickle(self.__DF_TRAIN_PATH)
+        df_val = pd.read_pickle(self.__DF_VAL_PATH)
+        df_test = pd.read_pickle(self.__DF_TEST_PATH)
+        return df_train, df_val, df_test
 
     def summary(self):
         for generator, name in (
