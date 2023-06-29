@@ -1,12 +1,13 @@
 import csv
 import pickle
 import sys
+import time
 from io import StringIO
 from pathlib import Path
-from typing import Union
+from typing import Union, Dict, Callable
 
 from keras import Model
-from keras.callbacks import ModelCheckpoint, Callback, EarlyStopping, ReduceLROnPlateau
+from keras.callbacks import Callback, EarlyStopping, ReduceLROnPlateau
 from tqdm import tqdm
 
 from log_io.logger import Logger
@@ -38,7 +39,6 @@ class ModelStateCheckpoint(Callback):
                     'epoch': epoch + 1
                 }, f, protocol=pickle.HIGHEST_PROTOCOL)
         self.__log.info("Saved")
-        a = 0
 
 
 class TrainingProgressBar(Callback):
@@ -88,7 +88,7 @@ class TrainingProgressBar(Callback):
     def __metrics_progress(self, logs):
         metrics_str = "["
         for metric, value in logs.items():
-            metrics_str += f'{metric}: {value:.4f}, '
+            metrics_str += f'{metric}: {value:.8f}, '
         metrics_str = metrics_str[0:-2] + "]"
         self.__log.info_file(
             f"Progress: [{self.__current_epoch + 1}/{self.__epochs}]: {self.__current_batch}/{self.__total_batches}"
@@ -112,12 +112,7 @@ class CustomEarlyStopping(EarlyStopping):
         sys.stdout = stdout_original
 
     def on_train_end(self, logs=None):
-        stdout_original = sys.stdout
-        sys.stdout = StringIO()
-        super().on_train_end(logs)
-        captured_message = sys.stdout.getvalue()
-        self.__log.info(captured_message)
-        sys.stdout = stdout_original
+        capture_message_from_monitored_function(self.__log.info, super().on_train_end, {'logs': logs})
 
 
 class CustomReduceLROnPlateau(ReduceLROnPlateau):
@@ -128,17 +123,17 @@ class CustomReduceLROnPlateau(ReduceLROnPlateau):
         self.__log = Logger()
 
     def on_epoch_end(self, epoch, logs=None):
-        stdout_original = sys.stdout
-        sys.stdout = StringIO()
-        super().on_epoch_end(epoch, logs)
-        captured_message = sys.stdout.getvalue()
-        self.__log.info(captured_message)
-        sys.stdout = stdout_original
+        capture_message_from_monitored_function(
+            self.__log.info,
+            super().on_epoch_end(epoch, logs),
+            {'epoch': epoch, 'logs': logs}
+        )
 
 
 class CustomCSVLogger(Callback):
     def __init__(self, filename: Path, separator: str = ',', append: bool = False, monitor_val: bool = False):
         super().__init__()
+        self.time_epoch_begin = 0
         self.csv_writer = None
         self.__total_batches = None
         self.epoch = None
@@ -148,16 +143,9 @@ class CustomCSVLogger(Callback):
         self.filename = filename
         self.append = append
         self.monitor_val = monitor_val
+        self.time_batch_begin = 0
         self.data_monitor = ['loss', 'acc'] if not monitor_val else ['val_loss', 'val_acc', 'lr']
-        self.init_header = ['epoch', 'batch', 'scaled_batch'] if not monitor_val else ['epoch']
-
-    def on_epoch_begin(self, epoch, logs=None):
-        self.epoch = epoch + 1
-
-    def on_epoch_end(self, epoch, logs=None):
-        row = [self.epoch]
-        if self.monitor_val:
-            self.__save_metrics(logs, row)
+        self.init_header = ['epoch', 'time (s)', 'batch', 'scaled_batch'] if not monitor_val else ['epoch', 'time (s)']
 
     def on_train_begin(self, logs=None):
         self.mode = 'a' if self.append else 'w'
@@ -175,8 +163,28 @@ class CustomCSVLogger(Callback):
             self.csv_writer.writerow(item_header)
             self.csv_file.flush()
 
+    def on_train_end(self, logs=None):
+        self.csv_file.close()
+
+    def on_epoch_begin(self, epoch, logs=None):
+        self.time_epoch_begin = time.time()
+        self.epoch = epoch + 1
+
+    def on_epoch_end(self, epoch, logs=None):
+        time_epoch_end = time.time()
+        elapsed_time = time_epoch_end - self.time_epoch_begin
+        row = [self.epoch, elapsed_time]
+        if self.monitor_val:
+            self.__save_metrics(logs, row)
+
+    def on_batch_begin(self, batch, logs=None):
+        self.time_batch_begin = time.time()
+        super().on_batch_begin(batch, logs)
+
     def on_batch_end(self, batch, logs=None):
-        row = [self.epoch, batch, (batch / self.__total_batches) + (self.epoch - 1)]
+        time_batch_end = time.time()
+        elapsed_time = time_batch_end - self.time_batch_begin
+        row = [self.epoch, elapsed_time, batch, (batch / self.__total_batches) + (self.epoch - 1)]
         if not self.monitor_val:
             self.__save_metrics(logs, row)
 
@@ -189,5 +197,16 @@ class CustomCSVLogger(Callback):
         self.csv_writer.writerow(row)
         self.csv_file.flush()
 
-    def on_train_end(self, logs=None):
-        self.csv_file.close()
+
+def capture_message_from_monitored_function(
+        printer: Callable[[str], None],
+        function_to_monitor: Callable,
+        monitored_function_kwargs: Dict[str, any]):
+    stdout_original = sys.stdout
+    sys.stdout = StringIO()
+    function_to_monitor(**monitored_function_kwargs)
+    captured_message = sys.stdout.getvalue()
+    messages = captured_message.split('\n')[:-1]
+    sys.stdout = stdout_original
+    for message in messages:
+        printer(message)

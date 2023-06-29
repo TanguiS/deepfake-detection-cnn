@@ -41,7 +41,7 @@ class VGG19(ModelBase, ABC):
         if self.optimizer is None:
             self.log.info("Using new optimizer.")
             self.__model.compile(loss='categorical_crossentropy',
-                                 optimizer=optimizers.Adam(),
+                                 optimizer=optimizers.Adam(lr=1e-5),
                                  metrics=['accuracy'])
             return
         self.log.info(f"Loading optimizer and previous state from {self.optimizer}")

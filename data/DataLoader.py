@@ -1,16 +1,14 @@
-import plaidml.keras
-from pandas import DataFrame
-
-plaidml.keras.install_backend()
-
-from log_io.logger import Logger
 from pathlib import Path
 from typing import Tuple, Optional
 
+import random as rd
+import numpy as np
 import pandas as pd
-
 from keras.preprocessing.image import ImageDataGenerator
 from keras_preprocessing.image import DataFrameIterator
+from pandas import DataFrame
+
+from log_io.logger import Logger
 
 
 class DataLoader:
@@ -91,10 +89,19 @@ class DataLoader:
         dataframe['index_col'] = dataframe.index
         dataframe['index_col'] = dataframe.index.astype(str)
         dataframe['label'] = dataframe['label'].map({True: 'Fake', False: 'Real'})
+
+        dataframe = balance_dataframe(dataframe)
+
+        rm_sample = dataframe.sample(frac=0.5)
+        dataframe = dataframe.drop(rm_sample.index)
+        del rm_sample
+
         test_dataframe = dataframe.sample(frac=0.1)
         dataframe = dataframe.drop(test_dataframe.index)
-        evaluation_dataframe = dataframe.sample(frac=0.2)
+
+        evaluation_dataframe = dataframe.sample(frac=0.3)
         dataframe = dataframe.drop(evaluation_dataframe.index)
+
         return dataframe, evaluation_dataframe, test_dataframe
 
     def __save_dataframes(self, df_train: DataFrame, df_val: DataFrame, df_test: DataFrame):
@@ -111,7 +118,7 @@ class DataLoader:
         df_test.to_pickle(str(self.__DF_TEST_PATH))
 
     def __load_dataframes(self) -> Optional[Tuple[DataFrame, DataFrame, DataFrame]]:
-        self.__log.info(f'Trying to load dataframes from {self.__DF_TRAIN_PATH.parents}')
+        self.__log.info(f'Trying to load dataframes from {str(self.__DF_TRAIN_PATH.parents)}')
         if not self.__DF_TRAIN_PATH.exists():
             return None
         if not self.__DF_VAL_PATH.exists():
@@ -155,3 +162,20 @@ class DataLoader:
     @property
     def test_generator(self):
         return self.__test_generator
+
+
+def balance_dataframe(dataframe: DataFrame) -> DataFrame:
+    Logger().info("Balancing dataframe...")
+
+    class_counts = dataframe['label'].value_counts()
+    minority_class = class_counts.idxmax()
+    majority_class = class_counts.idxmin()
+    max_count_per_class = class_counts.min()
+
+    minority_class_data = dataframe[dataframe['label'] == minority_class]
+    majority_class_data = dataframe[dataframe['label'] == majority_class]
+
+    balanced_minority_class_data = minority_class_data.sample(n=max_count_per_class)
+    balanced_dataframe = pd.concat([majority_class_data, balanced_minority_class_data])
+
+    return balanced_dataframe
