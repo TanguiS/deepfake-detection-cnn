@@ -35,6 +35,7 @@ class VGG19(ModelBase, ABC):
 
     def show_summary(self) -> None:
         self.__model.summary(print_fn=self.log.info)
+        super().show_summary()
 
     def compile(self) -> None:
         super().compile()

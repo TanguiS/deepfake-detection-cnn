@@ -92,7 +92,7 @@ class DataLoader:
 
         dataframe = balance_dataframe(dataframe)
 
-        rm_sample = dataframe.sample(frac=0.5)
+        rm_sample = dataframe.sample(frac=0.9)
         dataframe = dataframe.drop(rm_sample.index)
         del rm_sample
 

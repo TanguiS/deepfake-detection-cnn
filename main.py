@@ -3,7 +3,7 @@
 import plaidml.keras
 
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Optional
 import argparser
 from bench.plot_history import plot_training_results
 
@@ -18,7 +18,8 @@ def decode_trainer_args(args: Dict[str, any]):
         'output_dataframe': args['output_dataframe'],
         'arch': args['arch'],
         'batch_size': args['batch_size'],
-        'target_epoch': args['target_epoch']
+        'target_epoch': args['target_epoch'],
+        'model_name': args['model_name']
     }
     return kwargs
 
@@ -31,7 +32,8 @@ def launch_train(
         batch_size: int,
         target_epoch: int,
         output_folder: Path,
-        output_dataframe: Path
+        output_dataframe: Path,
+        model_name: Optional[str]
 ) -> None:
     workspace = output_folder.joinpath(arch)
     workspace.mkdir(exist_ok=True)
@@ -46,7 +48,7 @@ def launch_train(
         input_shape=input_shape,
         nb_epoch=1,
         batch_size=batch_size,
-        model_name=None
+        model_name=model_name
     )
     model.show_summary()
 

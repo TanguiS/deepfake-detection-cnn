@@ -34,6 +34,11 @@ def train_action_parser(subparsers):
     parser.add_argument("--grayscale", action='store_true', help="use Grayscale for input faces, default: False.")
     parser.add_argument("-b", "--batch_size", type=int, default=16, help="Batch size.")
     parser.add_argument("-epoch", "--target_epoch", type=int, required=True, help="Epoch to reach for the training.")
+    parser.add_argument("-m", "--model_name", type=str, default=None, required=False, help="Name of the model to "
+                                                                                           "create or to resume "
+                                                                                           "training, "
+                                                                                           "if not provided, "
+                                                                                           "will be ask to choose.")
 
 
 def plot_history_parser(subparsers):

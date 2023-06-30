@@ -36,14 +36,15 @@ class Trainer:
             factor=0.1,
             min_lr=0.000000001
         )
-        filepath = self.__model.workspace_path.joinpath("train_history.csv")
+        name = self.__model.keras_model_path.stem
+        filepath = self.__model.workspace_path.joinpath(f"{name}_train_history.csv")
         append = True
         if not filepath.exists():
             append = False
         if self.__model.is_first_run() and filepath.exists():
             append = False
         train_csv_save = CustomCSVLogger(filepath, separator=';', append=append)
-        filepath = self.__model.workspace_path.joinpath("val_history.csv")
+        filepath = self.__model.workspace_path.joinpath(f"{name}_val_history.csv")
         val_csv_save = CustomCSVLogger(filepath, separator=';', append=append, monitor_val=True)
 
         self.__callbacks = CallbackList(

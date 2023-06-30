@@ -104,12 +104,7 @@ class CustomEarlyStopping(EarlyStopping):
         self.__log = Logger()
 
     def on_epoch_end(self, epoch, logs=None):
-        stdout_original = sys.stdout
-        sys.stdout = StringIO()
-        super().on_epoch_end(epoch, logs)
-        captured_message = sys.stdout.getvalue()
-        self.__log.info(captured_message)
-        sys.stdout = stdout_original
+        capture_message_from_monitored_function(self.__log.info, super().on_epoch_end, {'epoch': epoch, 'logs': logs})
 
     def on_train_end(self, logs=None):
         capture_message_from_monitored_function(self.__log.info, super().on_train_end, {'logs': logs})
@@ -125,7 +120,7 @@ class CustomReduceLROnPlateau(ReduceLROnPlateau):
     def on_epoch_end(self, epoch, logs=None):
         capture_message_from_monitored_function(
             self.__log.info,
-            super().on_epoch_end(epoch, logs),
+            super().on_epoch_end,
             {'epoch': epoch, 'logs': logs}
         )
 
@@ -206,7 +201,9 @@ def capture_message_from_monitored_function(
     sys.stdout = StringIO()
     function_to_monitor(**monitored_function_kwargs)
     captured_message = sys.stdout.getvalue()
-    messages = captured_message.split('\n')[:-1]
+    messages = captured_message.split('\n')
     sys.stdout = stdout_original
+    if len(messages) == 0:
+        return
     for message in messages:
         printer(message)

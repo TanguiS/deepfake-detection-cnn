@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Tuple, Dict, Optional, Union
 
 import keras
-from keras.optimizers import Optimizer
 
 from log_io import logger
 from log_io.logger import Logger
@@ -29,12 +28,15 @@ class ModelBase(ABC):
         self.__log = logger.Logger()
 
         if model_name is None:
+            self.__log.info("No model name provided.")
             self.__select_model_without_name()
         else:
+            self.__log.info("Model name provided.")
             self.__select_model_with_name(model_name)
 
         self.__create_model_first_run()
-        self.__log.info(f"Model name choose: {self.__model_full_name}, is first run ? : {self.__first_run}.")
+        self.__load_asset()
+        self.__log.info(f"Model name choose: {self.__model_path.stem}, is first run ? : {self.__first_run}.")
 
     def __select_model_with_name(self, model_name: str) -> None:
         available_models = find_models(self.__models_dir, self.__model_arch)
@@ -43,9 +45,12 @@ class ModelBase(ABC):
             if decoded[1] == model_name:
                 selected_model = [model for model in self.__models_dir.rglob(f"*{value}*")][0]
                 self.__model_path = selected_model
-                self.__model_full_name = model_name_from_path(self.__model_path)
-                pass
+                self.__input_shape = decoded[2]
+                self.__log.info("Found a match with model name.")
+                return
+        self.__log.info(f"No matching model name for : {model_name} --> new model.")
         self.__first_run = True
+        self.__model_path = new_model_format(self.__model_arch, model_name, self.__input_shape)
 
     def __select_model_without_name(self) -> None:
         available_models = find_models(self.__models_dir, self.__model_arch)
@@ -53,27 +58,46 @@ class ModelBase(ABC):
         if self.__model_path is None:
             self.__first_run = True
         else:
-            self.__model_full_name = model_name_from_path(self.__model_path)
+            decoded = decode_model_name(self.__model_path.stem)
+            self.__input_shape = decoded[2]
 
     def __create_model_first_run(self) -> None:
-        if self.__first_run:
+        if self.__first_run and self.__model_path is None:
             model_name = model_first_run_choose_name()
-            self.__model_full_name = new_model_format(self.__model_arch, model_name, self.__input_shape)
-            self.__model_path = self.workspace_path.joinpath(self.__model_full_name + ".h5")
+            model_full_name = new_model_format(self.__model_arch, model_name, self.__input_shape)
+            self.__model_path = self.workspace_path.joinpath(model_full_name + ".h5")
 
-    @abstractmethod
-    def show_summary(self) -> None:
-        pass
-
-    @abstractmethod
-    def compile(self) -> None:
+    def __load_asset(self):
+        self.__log.info("Loading asset...")
         pkl_checkpoint = self.keras_model_path.with_suffix('.pkl')
         if not pkl_checkpoint.exists():
+            self.__log.info("No asset can be loaded -> first run.")
             return
         with open(pkl_checkpoint, 'rb') as f:
             d = pickle.load(f)
             self.__current_epoch = d['epoch']
             self.__optimizer = d['optimizer']
+        self.__log.info("Asset loaded.")
+
+    @abstractmethod
+    def show_summary(self) -> None:
+        line_length = 65
+        sep = ' : '
+        info_key = ['Model name', 'Shape', 'Start epoch', 'Optimizers']
+        info_value = [str(self.__model_path.stem), str(self.__input_shape), self.__current_epoch, str(self.__optimizer)]
+        for idx, key in enumerate(info_key):
+            value = str(info_value[idx])
+            key_length = len(key)
+            value_length = len(value)
+            total_space = line_length - key_length - value_length - len(sep)
+            left_space = total_space // 2
+            right_space = total_space - left_space
+            self.__log.info(f"{left_space * ' '}{key}{sep}{value}{right_space * ' '}")
+        self.__log.info(f"{line_length * '='}")
+
+    @abstractmethod
+    def compile(self) -> None:
+        pass
 
     @abstractmethod
     def keras_model(self) -> Optional[Union[keras.Model, keras.Sequential]]:
