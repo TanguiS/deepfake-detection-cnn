@@ -1,11 +1,10 @@
-
-
 import plaidml.keras
 
 from pathlib import Path
 from typing import Dict, Tuple, Optional
 import argparser
 from bench.plot_history import plot_training_results
+from config import config
 
 
 def decode_trainer_args(args: Dict[str, any]):
@@ -39,7 +38,7 @@ def launch_train(
     workspace.mkdir(exist_ok=True)
     logger = Logger(workspace)
 
-    data = DataLoader(root_face_folder, df_faces_path, input_shape[0], output_dataframe, batch_size)
+    data = DataLoader(root_face_folder, df_faces_path, input_shape[0], output_dataframe, arch, batch_size)
     data.summary()
 
     model: ModelBase = models.import_model(arch)(
@@ -80,7 +79,7 @@ def decode_shape(shape: int, grayscale: bool):
 
 
 if __name__ == '__main__':
-    plaidml.keras.install_backend()
+    config.config()
 
     from log_io.logger import Logger
     from models import ModelBase

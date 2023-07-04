@@ -51,6 +51,7 @@ class ModelBase(ABC):
         self.__log.info(f"No matching model name for : {model_name} --> new model.")
         self.__first_run = True
         self.__model_path = new_model_format(self.__model_arch, model_name, self.__input_shape)
+        self.__model_path = self.workspace_path.joinpath(self.__model_path + ".h5")
 
     def __select_model_without_name(self) -> None:
         available_models = find_models(self.__models_dir, self.__model_arch)

@@ -1,9 +1,8 @@
 from pathlib import Path
 from typing import Tuple, Optional
 
-import random as rd
-import numpy as np
 import pandas as pd
+from keras.applications import vgg19, xception, resnet50
 from keras.preprocessing.image import ImageDataGenerator
 from keras_preprocessing.image import DataFrameIterator
 from pandas import DataFrame
@@ -18,6 +17,7 @@ class DataLoader:
             dataframe_pickle: Path,
             shape: int,
             save_dir: Path,
+            arch: str,
             batch_size: int = 32
     ) -> None:
         super().__init__()
@@ -31,14 +31,16 @@ class DataLoader:
         self.__train_generator, self.__val_generator, self.__test_generator = self.__load_dataset(
             dataframe_pickle,
             videos_root_dir,
-            batch_size
+            batch_size,
+            arch
         )
 
     def __load_dataset(
             self,
             dataframe_pickle: Path,
             videos_root_dir: Path,
-            batch_size: int
+            batch_size: int,
+            arch: str
     ) -> Tuple[DataFrameIterator, DataFrameIterator, DataFrameIterator]:
 
         dataframes = self.__load_dataframes()
@@ -49,8 +51,20 @@ class DataLoader:
         else:
             df_train, df_val, df_test = dataframes
 
+        preprocess_func = None
+
+        if arch == 'VGG19':
+            preprocess_func = vgg19.preprocess_input
+        elif arch == 'Xception':
+            preprocess_func = xception.preprocess_input
+        elif arch == 'ResNet50':
+            preprocess_func = resnet50.preprocess_input
+
+        if preprocess_func is None:
+            raise ValueError(f"Given arch is not valid : {arch}")
+
         datagen = ImageDataGenerator(
-            rescale=1. / 255
+            preprocessing_function=preprocess_func
         )
 
         kwargs = {
@@ -92,7 +106,7 @@ class DataLoader:
 
         dataframe = balance_dataframe(dataframe)
 
-        rm_sample = dataframe.sample(frac=0.9)
+        rm_sample = dataframe.sample(frac=0.8)
         dataframe = dataframe.drop(rm_sample.index)
         del rm_sample
 
