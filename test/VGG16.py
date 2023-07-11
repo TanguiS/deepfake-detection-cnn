@@ -1,3 +1,4 @@
+"""
 import plaidml.keras
 
 plaidml.keras.install_backend()
@@ -58,3 +59,4 @@ class VGG16:
     @property
     def model(self):
         return self.__VGG16
+"""

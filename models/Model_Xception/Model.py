@@ -2,10 +2,11 @@ from abc import ABC
 from pathlib import Path
 from typing import Optional, Tuple, Union
 
-import keras
-from keras import optimizers
-from keras.applications import xception
-from keras.models import load_model
+import tensorflow
+from tensorflow.keras import optimizers
+from tensorflow.keras.applications import xception
+from tensorflow.keras.models import load_model
+from tensorflow.keras.models import Model, Sequential
 
 from models.base_model import ModelBase
 
@@ -30,7 +31,7 @@ class Xception(ModelBase, ABC):
             'input_shape': self.input_shape,
             'classes': 2
         }
-        self.__model: keras.Model = xception.Xception(**kwargs)
+        self.__model: Model = xception.Xception(**kwargs)
         self.log.info(" > Done")
 
     def show_summary(self) -> None:
@@ -38,7 +39,7 @@ class Xception(ModelBase, ABC):
         super().show_summary()
 
     def compile(self) -> None:
-        loss = keras.losses.mean_squared_error
+        loss = tensorflow.keras.losses.mean_squared_error
         if self.optimizer is None:
             self.log.info("Using new optimizer.")
             self.__model.compile(loss=loss,
@@ -50,8 +51,8 @@ class Xception(ModelBase, ABC):
                              optimizer=optimizers.Adam.from_config(self.optimizer),
                              metrics=['accuracy'])
 
-    def keras_model(self) -> Optional[Union[keras.Model, keras.Sequential]]:
+    def keras_model(self) -> Optional[Union[Model, Sequential]]:
         return self.__model
 
 
-Model = Xception
+model = Xception

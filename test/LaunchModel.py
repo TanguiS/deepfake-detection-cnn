@@ -1,3 +1,4 @@
+"""
 import plaidml.keras
 
 plaidml.keras.install_backend()
@@ -96,3 +97,4 @@ def launch(data_loader: DataLoader, vgg_16: VGG16, batch_size: int):
     test_steps = test_generator.samples // batch_size
     results = VGG_16.evaluate_generator(test_generator, steps=test_steps, verbose=1)
     print(results)
+"""

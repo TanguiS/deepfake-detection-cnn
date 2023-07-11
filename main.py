@@ -1,10 +1,9 @@
-import plaidml.keras
-
 from pathlib import Path
 from typing import Dict, Tuple, Optional
+
 import argparser
 from bench.plot_history import plot_training_results
-from config import config
+import tensorflow as tf
 
 
 def decode_trainer_args(args: Dict[str, any]):
@@ -79,7 +78,12 @@ def decode_shape(shape: int, grayscale: bool):
 
 
 if __name__ == '__main__':
-    config.config()
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    for gpu in gpus:
+        tf.config.experimental.set_memory_growth(gpu, True)
+    conf = tf.config.list_physical_devices('GPU')
+
+    print(conf)
 
     from log_io.logger import Logger
     from models import ModelBase

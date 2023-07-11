@@ -2,9 +2,8 @@ from pathlib import Path
 from typing import Tuple, Optional
 
 import pandas as pd
-from keras.applications import vgg19, xception, resnet50
-from keras.preprocessing.image import ImageDataGenerator
-from keras_preprocessing.image import DataFrameIterator
+from tensorflow.keras.applications import vgg19, xception, resnet50
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from pandas import DataFrame
 
 from log_io.logger import Logger
@@ -41,7 +40,7 @@ class DataLoader:
             videos_root_dir: Path,
             batch_size: int,
             arch: str
-    ) -> Tuple[DataFrameIterator, DataFrameIterator, DataFrameIterator]:
+    ) -> Tuple[ImageDataGenerator, ImageDataGenerator, ImageDataGenerator]:
 
         dataframes = self.__load_dataframes()
         if dataframes is None:

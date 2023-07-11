@@ -2,10 +2,11 @@ from abc import ABC
 from pathlib import Path
 from typing import Optional, Tuple, Union
 
-import keras
-from keras import optimizers
-from keras.applications import vgg19, resnet50
-from keras.models import load_model
+from tensorflow.keras import optimizers
+from tensorflow.keras.applications import resnet50
+from tensorflow.keras.models import load_model
+from tensorflow.keras.models import Model, Sequential
+from tensorflow.keras.losses import binary_crossentropy
 
 from models.base_model import ModelBase
 
@@ -30,7 +31,7 @@ class ResNet50(ModelBase, ABC):
             'input_shape': self.input_shape,
             'classes': 2
         }
-        self.__model: keras.Model = resnet50.ResNet50(**kwargs)
+        self.__model: Model = resnet50.ResNet50(**kwargs)
         self.log.info(" > Done")
 
     def show_summary(self) -> None:
@@ -39,7 +40,7 @@ class ResNet50(ModelBase, ABC):
 
     def compile(self) -> None:
         super().compile()
-        loss = keras.losses.binary_crossentropy
+        loss = binary_crossentropy
         if self.optimizer is None:
             self.log.info("Using new optimizer.")
             self.__model.compile(loss=loss,
@@ -51,8 +52,8 @@ class ResNet50(ModelBase, ABC):
                              optimizer=optimizers.Adam.from_config(self.optimizer),
                              metrics=['accuracy'])
 
-    def keras_model(self) -> Optional[Union[keras.Model, keras.Sequential]]:
+    def keras_model(self) -> Optional[Union[Model, Sequential]]:
         return self.__model
 
 
-Model = ResNet50
+model = ResNet50

@@ -3,7 +3,8 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Tuple, Dict, Optional, Union
 
-import keras
+import tensorflow.keras
+import tensorflow.keras as keras
 
 from log_io import logger
 from log_io.logger import Logger

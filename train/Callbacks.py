@@ -6,8 +6,8 @@ from io import StringIO
 from pathlib import Path
 from typing import Union, Dict, Callable
 
-from keras import Model
-from keras.callbacks import Callback, EarlyStopping, ReduceLROnPlateau
+from tensorflow.keras import Model
+from tensorflow.keras.callbacks import Callback, EarlyStopping, ReduceLROnPlateau
 from tqdm import tqdm
 
 from log_io.logger import Logger

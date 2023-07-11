@@ -1,4 +1,4 @@
-from keras.callbacks import CallbackList
+from tensorflow.keras.callbacks import CallbackList
 
 from data.DataLoader import DataLoader
 from log_io.logger import Logger
@@ -47,9 +47,9 @@ class Trainer:
         filepath = self.__model.workspace_path.joinpath(f"{name}_val_history.csv")
         val_csv_save = CustomCSVLogger(filepath, separator=';', append=append, monitor_val=True)
 
-        self.__callbacks = CallbackList(
-            [optimizer_callback, progress_bar, early_stop, learning_rate_reduction, train_csv_save, val_csv_save]
-        )
+        self.__callbacks = [
+            optimizer_callback, progress_bar, early_stop, learning_rate_reduction, train_csv_save, val_csv_save
+        ]
 
     def run(self, max_epochs: int = 10):
         self.__model.compile()
@@ -63,14 +63,14 @@ class Trainer:
         else:
             self.__log.info(f"Starting training from scratch to {max_epochs} epochs.")
 
-        self.__model.keras_model().fit_generator(
+        self.__model.keras_model().fit(
             self.__train_data,
             steps_per_epoch=self.__train_data.samples // self.__batch_size,
             validation_data=self.__val_data,
             validation_steps=self.__val_data.samples // self.__batch_size,
             epochs=max_epochs,
             initial_epoch=self.__model.start_epoch,
-            callbacks=[self.__callbacks],
+            callbacks=self.__callbacks,
             verbose=0
         )
 

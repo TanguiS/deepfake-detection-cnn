@@ -1,7 +1,7 @@
 from pathlib import Path
+
 import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
 
 
 def plot_training_results(train_csv_path: Path, val_csv_path: Path) -> None:
