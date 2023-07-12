@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Tuple, Dict, Optional, Union
 
-import tensorflow.keras
-import tensorflow.keras as keras
+from tensorflow.keras import optimizers
+from tensorflow.keras.models import Model, load_model, Sequential
 
 from log_io import logger
 from log_io.logger import Logger
@@ -18,6 +18,7 @@ class ModelBase(ABC):
         super().__init__()
 
         self.__optimizer = None
+        self.__model: Optional[Model] = None
         self.__input_shape = input_shape
         self.__nb_epoch = nb_epoch
         self.__batch_size = batch_size
@@ -47,12 +48,13 @@ class ModelBase(ABC):
                 selected_model = [model for model in self.__models_dir.rglob(f"*{value}*")][0]
                 self.__model_path = selected_model
                 self.__input_shape = decoded[2]
+                self.__first_run = False
                 self.__log.info("Found a match with model name.")
                 return
         self.__log.info(f"No matching model name for : {model_name} --> new model.")
         self.__first_run = True
         self.__model_path = new_model_format(self.__model_arch, model_name, self.__input_shape)
-        self.__model_path = self.workspace_path.joinpath(self.__model_path + ".h5")
+        self.__model_path = self.workspace_path.joinpath(self.__model_path + ".tf")
 
     def __select_model_without_name(self) -> None:
         available_models = find_models(self.__models_dir, self.__model_arch)
@@ -71,7 +73,7 @@ class ModelBase(ABC):
 
     def __load_asset(self):
         self.__log.info("Loading asset...")
-        pkl_checkpoint = self.keras_model_path.with_suffix('.pkl')
+        pkl_checkpoint = self.__model_path.with_suffix('.pkl')
         if not pkl_checkpoint.exists():
             self.__log.info("No asset can be loaded -> first run.")
             return
@@ -81,8 +83,20 @@ class ModelBase(ABC):
             self.__optimizer = d['optimizer']
         self.__log.info("Asset loaded.")
 
-    @abstractmethod
+    def compile(self) -> None:
+        if self.__optimizer is None:
+            self.__log.info("Using new optimizer.")
+            self.__model.compile(loss=self.__get_losses_metric__(),
+                                 optimizer=optimizers.Adam(learning_rate=1e-5),
+                                 metrics=['accuracy'])
+            return
+        self.__log.info(f"Loading optimizer and previous state from {self.__optimizer}")
+        self.__model.compile(loss=self.__get_losses_metric__(),
+                             optimizer=optimizers.Adam.from_config(self.__optimizer),
+                             metrics=['accuracy'])
+
     def show_summary(self) -> None:
+        self.__model.summary(print_fn=self.__log.info)
         line_length = 65
         sep = ' : '
         info_key = ['Model name', 'Shape', 'Start epoch', 'Optimizers']
@@ -97,42 +111,51 @@ class ModelBase(ABC):
             self.__log.info(f"{left_space * ' '}{key}{sep}{value}{right_space * ' '}")
         self.__log.info(f"{line_length * '='}")
 
+    def __setup_model__(self):
+        if self.__model_path and self.__model_path.exists():
+            self.__log.info("Loading model...")
+            self.__model = load_model(str(self.__model_path), compile=False)
+            self.__log.info(" > Done")
+            return
+        self.__log.info("Creating model...")
+        kwargs = {
+            'include_top': True,
+            'weights': None,
+            'input_shape': self.input_shape,
+            'classes': 2
+        }
+        self.__model = self.__get_architecture_class__()(**kwargs)
+        self.__log.info(" > Done")
+
     @abstractmethod
-    def compile(self) -> None:
+    def __get_losses_metric__(self) -> any:
         pass
 
     @abstractmethod
-    def keras_model(self) -> Optional[Union[keras.Model, keras.Sequential]]:
-        return None
+    def __get_architecture_class__(self) -> any:
+        pass
 
     @property
     def keras_model_path(self) -> Path:
         return self.__model_path
 
     @property
+    def keras_model(self) -> Optional[Union[Model, Sequential]]:
+        return self.__model
+
+    @property
     def workspace_path(self) -> Path:
         return self.__models_dir.joinpath(self.__model_arch)
 
     @property
-    def input_shape(self) -> Tuple[int , int, int]:
+    def input_shape(self) -> Tuple[int, int, int]:
         return self.__input_shape
-
-    @property
-    def models_dir(self) -> Union[Path, any]:
-        return self.__models_dir
-
-    @property
-    def log(self):
-        return self.__log
 
     @property
     def start_epoch(self):
         return self.__current_epoch
 
     @property
-    def optimizer(self):
-        return self.__optimizer
-
     def is_first_run(self):
         return self.__first_run
 
@@ -161,10 +184,9 @@ def find_models(model_dir: Path, model_arch: str) -> Dict[int, str]:
     models = dict()
     curr_index = 0
     for name in model_dir.rglob(f"{model_arch}*"):
-        if not name.exists() or name.is_dir() or name.suffix != ".h5":
-            continue
-        models[curr_index] = name.stem
-        curr_index += 1
+        if name.suffix == ".h5" or name.suffix == ".tf" or name.suffix == ".keras":
+            models[curr_index] = name.stem
+            curr_index += 1
     return models
 
 

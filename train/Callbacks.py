@@ -139,7 +139,8 @@ class CustomCSVLogger(Callback):
         self.append = append
         self.monitor_val = monitor_val
         self.time_batch_begin = 0
-        self.data_monitor = ['loss', 'acc'] if not monitor_val else ['val_loss', 'val_acc', 'lr']
+        self.rows = []
+        self.data_monitor = ['loss', 'acc'] if not monitor_val else ['val_loss', 'val_accuracy', 'lr']
         self.init_header = ['epoch', 'time (s)', 'batch', 'scaled_batch'] if not monitor_val else ['epoch', 'time (s)']
 
     def on_train_begin(self, logs=None):
@@ -170,7 +171,12 @@ class CustomCSVLogger(Callback):
         elapsed_time = time_epoch_end - self.time_epoch_begin
         row = [self.epoch, elapsed_time]
         if self.monitor_val:
-            self.__save_metrics(logs, row)
+            self.__add_metrics(logs, row)
+            self.__save_metrics(row)
+            return
+        for row in self.rows:
+            self.__save_metrics(row)
+        self.rows.clear()
 
     def on_batch_begin(self, batch, logs=None):
         self.time_batch_begin = time.time()
@@ -181,14 +187,17 @@ class CustomCSVLogger(Callback):
         elapsed_time = time_batch_end - self.time_batch_begin
         row = [self.epoch, elapsed_time, batch, (batch / self.__total_batches) + (self.epoch - 1)]
         if not self.monitor_val:
-            self.__save_metrics(logs, row)
+            self.__add_metrics(logs, row)
+            self.rows.append(row)
 
-    def __save_metrics(self, logs, row):
+    def __add_metrics(self, logs, row):
         for metric in self.data_monitor:
             try:
                 row.append(logs[metric])
             except KeyError:
                 pass
+
+    def __save_metrics(self, row):
         self.csv_writer.writerow(row)
         self.csv_file.flush()
 

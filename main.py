@@ -13,11 +13,12 @@ def decode_trainer_args(args: Dict[str, any]):
         'root_face_folder': args['root_face_folder'],
         'df_faces_path': args['df_faces_path'],
         'output_folder': args['output_folder'],
-        'output_dataframe': args['output_dataframe'],
         'arch': args['arch'],
         'batch_size': args['batch_size'],
         'target_epoch': args['target_epoch'],
-        'model_name': args['model_name']
+        'model_name': args['model_name'],
+        'seed': args['seed'],
+        'distribution': args['distribution']
     }
     return kwargs
 
@@ -30,14 +31,15 @@ def launch_train(
         batch_size: int,
         target_epoch: int,
         output_folder: Path,
-        output_dataframe: Path,
+        distribution: str,
+        seed: int,
         model_name: Optional[str]
 ) -> None:
     workspace = output_folder.joinpath(arch)
     workspace.mkdir(exist_ok=True)
     logger = Logger(workspace)
 
-    data = DataLoader(root_face_folder, df_faces_path, input_shape[0], output_dataframe, arch, batch_size)
+    data = DataLoader(root_face_folder, df_faces_path, input_shape[0], seed, arch, batch_size, distribution)
     data.summary()
 
     model: ModelBase = models.import_model(arch)(

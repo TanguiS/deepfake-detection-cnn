@@ -1,4 +1,3 @@
-from models import Model_VGG19
 from models.base_model import ModelBase
 
 

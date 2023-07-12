@@ -40,8 +40,8 @@ def plot_training_results(train_csv_path: Path, val_csv_path: Path) -> None:
 
     # Plot accuracy
     ax2 = axes[1]
-    ax2.plot(val_data['epoch'], val_data['val_acc'], label='Validation Accuracy', color=val_acc_color)
-    ax2.scatter(val_data['epoch'], val_data['val_acc'], color=val_acc_color, s=10)
+    ax2.plot(val_data['epoch'], val_data['val_accuracy'], label='Validation Accuracy', color=val_acc_color)
+    ax2.scatter(val_data['epoch'], val_data['val_accuracy'], color=val_acc_color, s=10)
     ax2.plot(train_avg_acc.index, train_avg_acc, label='Training Accuracy', color=train_acc_color)
     ax2.scatter(train_avg_acc.index, train_avg_acc, color=train_acc_color, s=10)
     ax2.set_xlabel('Epoch')

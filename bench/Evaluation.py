@@ -18,7 +18,7 @@ class ModelEvaluator:
         face = face_extract.extract_face(frame_path, face_detector_model, self.__shape[0])
         x = np.expand_dims(face/255, axis=0)
         images = np.vstack([x])
-        yhat = self.__model.keras_model().predict(
+        yhat = self.__model.keras_model.predict(
             images
         )
         return yhat

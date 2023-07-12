@@ -23,14 +23,14 @@ class Trainer:
         optimizer_callback = ModelStateCheckpoint(filepath=filepath)
         progress_bar = TrainingProgressBar()
         early_stop = CustomEarlyStopping(
-            monitor='val_acc',
+            monitor='val_accuracy',
             min_delta=0,
             patience=10,
             verbose=1,
             mode='auto'
         )
         learning_rate_reduction = CustomReduceLROnPlateau(
-            monitor='val_acc',
+            monitor='val_accuracy',
             patience=2,
             verbose=1,
             factor=0.1,
@@ -41,7 +41,7 @@ class Trainer:
         append = True
         if not filepath.exists():
             append = False
-        if self.__model.is_first_run() and filepath.exists():
+        if self.__model.is_first_run:
             append = False
         train_csv_save = CustomCSVLogger(filepath, separator=';', append=append)
         filepath = self.__model.workspace_path.joinpath(f"{name}_val_history.csv")
@@ -58,12 +58,12 @@ class Trainer:
             self.__log.err(f"Error: start_epoch[{self.__model.start_epoch}] >= max_epoch[{max_epochs}].")
             raise ValueError
 
-        if self.__model.start_epoch > 0 and not self.__model.is_first_run():
+        if self.__model.start_epoch > 0 and not self.__model.is_first_run:
             self.__log.info(f"Resume training, starting at {self.__model.start_epoch} epoch to {max_epochs}.")
         else:
             self.__log.info(f"Starting training from scratch to {max_epochs} epochs.")
 
-        self.__model.keras_model().fit(
+        self.__model.keras_model.fit(
             self.__train_data,
             steps_per_epoch=self.__train_data.samples // self.__batch_size,
             validation_data=self.__val_data,
@@ -75,10 +75,10 @@ class Trainer:
         )
 
         self.__log.info(f"TRAINING Done: Saving model without Optimizer to {self.__model.keras_model_path.name}...")
-        self.__model.keras_model().save(str(self.__model.keras_model_path), include_optimizer=False)
+        self.__model.keras_model.save(str(self.__model.keras_model_path), include_optimizer=False)
         self.__log.info(" > Saved")
 
         self.__log.info("Testing model on Test generator.")
         test_steps = self.__test_data.samples // self.__batch_size
-        results = self.__model.keras_model().evaluate_generator(self.__test_data, steps=test_steps, verbose=1)
+        results = self.__model.keras_model.evaluate_generator(self.__test_data, steps=test_steps, verbose=1)
         self.__log.info(f"Results of tests : {results}")

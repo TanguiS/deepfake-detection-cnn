@@ -3,22 +3,22 @@ from pathlib import Path
 from typing import Optional, Tuple
 
 import tensorflow
-from tensorflow.keras.applications import xception
+from tensorflow.keras.applications import resnet_v2
 
 from models.base_model import ModelBase
 
 
-class Xception(ModelBase, ABC):
+class ResNet152V2(ModelBase, ABC):
     def __init__(self, models_dir: Path, model_arch: str, input_shape: Tuple[int, int, int], nb_epoch: int,
                  batch_size: int = 32, model_name: Optional[str] = None) -> None:
         super().__init__(models_dir, model_arch, input_shape, nb_epoch, batch_size, model_name)
         self.__setup_model__()
 
-    def __get_losses_metric__(self) -> any:
+    def __get_architecture_class__(self) -> any:
+        return resnet_v2.ResNet152V2
+
+    def __get_losses_metric__(self):
         return tensorflow.keras.losses.categorical_crossentropy
 
-    def __get_architecture_class__(self) -> any:
-        return xception.Xception
 
-
-model = Xception
+model = ResNet152V2

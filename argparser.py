@@ -21,15 +21,18 @@ def args_parser() -> Dict[str, any]:
 def train_action_parser(subparsers):
     parser = subparsers.add_parser("train", help="Train a model or resume a training.")
 
-    parser.add_argument("--arch", choices=["VGG19", "Xception", "ResNet50"], required=True, help="Choice an available architecture model.")
+    parser.add_argument("--arch", choices=["VGG19", "Xception", "ResNet50"], required=True, help="Choice an available "
+                                                                                                 "architecture model.")
     parser.add_argument("-root", "--root_face_folder", type=Path, required=True,
                         help="Path to the folder that contains all the faces.")
     parser.add_argument("-df", "--df_faces_path", type=Path, required=True,
                         help="Path to the pickle dataframe that contains the faces informations.")
     parser.add_argument("-o", "--output_folder", type=Path, required=True,
                         help="Path to the saving folder for the models and log.")
-    parser.add_argument("-odf", "--output_dataframe", type=Path, required=False,
-                        help="Path to save the train, validation and test dataframes for reproducibility.")
+    parser.add_argument("-s", "--seed", type=int, default=41, help="Seed for reproducibility, WARNING need to be the "
+                                                                   "same to resume training")
+    parser.add_argument("-d", "--distribution", type=str, default="80-10-10",
+                        help="Frac of the dataframe to use for train-validation-test amount of frames")
     parser.add_argument("--shape", type=int, default=128, help="Shape/Dimension of the input face for the model.")
     parser.add_argument("--grayscale", action='store_true', help="use Grayscale for input faces, default: False.")
     parser.add_argument("-b", "--batch_size", type=int, default=16, help="Batch size.")
