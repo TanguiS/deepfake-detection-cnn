@@ -21,8 +21,8 @@ def args_parser() -> Dict[str, any]:
 def train_action_parser(subparsers):
     parser = subparsers.add_parser("train", help="Train a model or resume a training.")
 
-    parser.add_argument("--arch", choices=["VGG19", "Xception", "ResNet50"], required=True, help="Choice an available "
-                                                                                                 "architecture model.")
+    parser.add_argument("--arch", choices=["ResNet152V2", "Xception", "EfficientNetB4"], required=True,
+                        help="Choice an available architecture model.")
     parser.add_argument("-root", "--root_face_folder", type=Path, required=True,
                         help="Path to the folder that contains all the faces.")
     parser.add_argument("-df", "--df_faces_path", type=Path, required=True,
