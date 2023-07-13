@@ -80,5 +80,5 @@ class Trainer:
 
         self.__log.info("Testing model on Test generator.")
         test_steps = self.__test_data.samples // self.__batch_size
-        results = self.__model.get_keras_model.evaluate_generator(self.__test_data, steps=test_steps, verbose=1)
+        results = self.__model.get_keras_model.evaluate(self.__test_data, steps=test_steps, verbose=1)
         self.__log.info(f"Results of tests : {results}")

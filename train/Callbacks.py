@@ -140,7 +140,7 @@ class CustomCSVLogger(Callback):
         self.monitor_val = monitor_val
         self.time_batch_begin = 0
         self.rows = []
-        self.data_monitor = ['loss', 'acc'] if not monitor_val else ['val_loss', 'val_accuracy', 'lr']
+        self.data_monitor = ['loss', 'accuracy'] if not monitor_val else ['val_loss', 'val_accuracy', 'lr']
         self.init_header = ['epoch', 'time (s)', 'batch', 'scaled_batch'] if not monitor_val else ['epoch', 'time (s)']
 
     def on_train_begin(self, logs=None):

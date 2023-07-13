@@ -59,8 +59,8 @@ def launch_train(
 
 def decode_plot_args(args: Dict[str, any]):
     kwargs = {
-        'train_csv_path': args['train_history_csv_path'],
-        'val_csv_path': args['validation_history_csv_path']
+        'train_csv_path': Path(args['train_history_csv_path']),
+        'val_csv_path': Path(args['validation_history_csv_path'])
     }
     return kwargs
 

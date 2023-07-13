@@ -10,7 +10,7 @@ from log_io import logger
 from log_io.logger import Logger
 
 
-# Model name format : {models arch}_{model_name}_{dim: xy_channel}.*
+# Model name format : {models arch}_{model-name}_{dim: xy_channel}.*
 
 class ModelBase(ABC):
     def __init__(self, models_dir: Path, model_arch: str, input_shape: Tuple[int, int, int], nb_epoch: int,
@@ -178,9 +178,9 @@ def model_name_from_path(model_path: Path) -> str:
 def decode_model_name(model_name_stem: str) -> Tuple[str, str, Tuple[int, int, int]]:
     split = model_name_stem.split("_")
     arch = split[0]
-    str_split_dim = [split[-2], split[-1]]
+    str_split_dim = [split[2], split[3]]
     shape = (int(str_split_dim[0]), int(str_split_dim[0]), int(str_split_dim[1]))
-    name = "_".join(split[1:-2])
+    name = split[1]
     return arch, name, shape
 
 
