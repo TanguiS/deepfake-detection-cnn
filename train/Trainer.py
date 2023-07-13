@@ -19,7 +19,7 @@ class Trainer:
         self.__setup_callbacks()
 
     def __setup_callbacks(self):
-        filepath = self.__model.keras_model_path
+        filepath = self.__model.get_keras_model_path
         optimizer_callback = ModelStateCheckpoint(filepath=filepath)
         progress_bar = TrainingProgressBar()
         early_stop = CustomEarlyStopping(
@@ -36,15 +36,15 @@ class Trainer:
             factor=0.1,
             min_lr=0.000000001
         )
-        name = self.__model.keras_model_path.stem
-        filepath = self.__model.workspace_path.joinpath(f"{name}_train_history.csv")
+        name = self.__model.get_keras_model_path.stem
+        filepath = self.__model.get_workspace_path.joinpath(f"{name}_train_history.csv")
         append = True
         if not filepath.exists():
             append = False
         if self.__model.is_first_run:
             append = False
         train_csv_save = CustomCSVLogger(filepath, separator=';', append=append)
-        filepath = self.__model.workspace_path.joinpath(f"{name}_val_history.csv")
+        filepath = self.__model.get_workspace_path.joinpath(f"{name}_val_history.csv")
         val_csv_save = CustomCSVLogger(filepath, separator=';', append=append, monitor_val=True)
 
         self.__callbacks = [
@@ -54,31 +54,31 @@ class Trainer:
     def run(self, max_epochs: int = 10):
         self.__model.compile()
 
-        if self.__model.start_epoch >= max_epochs:
-            self.__log.err(f"Error: start_epoch[{self.__model.start_epoch}] >= max_epoch[{max_epochs}].")
+        if self.__model.get_start_epoch >= max_epochs:
+            self.__log.err(f"Error: start_epoch[{self.__model.get_start_epoch}] >= max_epoch[{max_epochs}].")
             raise ValueError
 
-        if self.__model.start_epoch > 0 and not self.__model.is_first_run:
-            self.__log.info(f"Resume training, starting at {self.__model.start_epoch} epoch to {max_epochs}.")
+        if self.__model.get_start_epoch > 0 and not self.__model.is_first_run:
+            self.__log.info(f"Resume training, starting at {self.__model.get_start_epoch} epoch to {max_epochs}.")
         else:
             self.__log.info(f"Starting training from scratch to {max_epochs} epochs.")
 
-        self.__model.keras_model.fit(
+        self.__model.get_keras_model.fit(
             self.__train_data,
             steps_per_epoch=self.__train_data.samples // self.__batch_size,
             validation_data=self.__val_data,
             validation_steps=self.__val_data.samples // self.__batch_size,
             epochs=max_epochs,
-            initial_epoch=self.__model.start_epoch,
+            initial_epoch=self.__model.get_start_epoch,
             callbacks=self.__callbacks,
             verbose=0
         )
 
-        self.__log.info(f"TRAINING Done: Saving model without Optimizer to {self.__model.keras_model_path.name}...")
-        self.__model.keras_model.save(str(self.__model.keras_model_path), include_optimizer=False)
+        self.__log.info(f"TRAINING Done: Saving model without Optimizer to {self.__model.get_keras_model_path.name}...")
+        self.__model.get_keras_model.save(str(self.__model.get_keras_model_path), include_optimizer=False)
         self.__log.info(" > Saved")
 
         self.__log.info("Testing model on Test generator.")
         test_steps = self.__test_data.samples // self.__batch_size
-        results = self.__model.keras_model.evaluate_generator(self.__test_data, steps=test_steps, verbose=1)
+        results = self.__model.get_keras_model.evaluate_generator(self.__test_data, steps=test_steps, verbose=1)
         self.__log.info(f"Results of tests : {results}")

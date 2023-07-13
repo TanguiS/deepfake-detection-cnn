@@ -45,7 +45,7 @@ class ModelBase(ABC):
         for key, value in available_models.items():
             decoded = decode_model_name(value)
             if decoded[1] == model_name:
-                selected_model = [model for model in self.__models_dir.rglob(f"*{value}*")][0]
+                selected_model = [model for model in self.__models_dir.rglob(f"*{value}*.keras")][0]
                 self.__model_path = selected_model
                 self.__input_shape = decoded[2]
                 self.__first_run = False
@@ -54,7 +54,7 @@ class ModelBase(ABC):
         self.__log.info(f"No matching model name for : {model_name} --> new model.")
         self.__first_run = True
         self.__model_path = new_model_format(self.__model_arch, model_name, self.__input_shape)
-        self.__model_path = self.workspace_path.joinpath(self.__model_path + ".tf")
+        self.__model_path = self.get_workspace_path.joinpath(self.__model_path + ".keras")
 
     def __select_model_without_name(self) -> None:
         available_models = find_models(self.__models_dir, self.__model_arch)
@@ -69,7 +69,7 @@ class ModelBase(ABC):
         if self.__first_run and self.__model_path is None:
             model_name = model_first_run_choose_name()
             model_full_name = new_model_format(self.__model_arch, model_name, self.__input_shape)
-            self.__model_path = self.workspace_path.joinpath(model_full_name + ".h5")
+            self.__model_path = self.get_workspace_path.joinpath(model_full_name + ".h5")
 
     def __load_asset(self):
         self.__log.info("Loading asset...")
@@ -121,7 +121,7 @@ class ModelBase(ABC):
         kwargs = {
             'include_top': True,
             'weights': None,
-            'input_shape': self.input_shape,
+            'input_shape': self.get_input_shape,
             'classes': 2
         }
         self.__model = self.__get_architecture_class__()(**kwargs)
@@ -136,28 +136,32 @@ class ModelBase(ABC):
         pass
 
     @property
-    def keras_model_path(self) -> Path:
+    def get_keras_model_path(self) -> Path:
         return self.__model_path
 
     @property
-    def keras_model(self) -> Optional[Union[Model, Sequential]]:
+    def get_keras_model(self) -> Optional[Union[Model, Sequential]]:
         return self.__model
 
     @property
-    def workspace_path(self) -> Path:
+    def get_workspace_path(self) -> Path:
         return self.__models_dir.joinpath(self.__model_arch)
 
     @property
-    def input_shape(self) -> Tuple[int, int, int]:
+    def get_input_shape(self) -> Tuple[int, int, int]:
         return self.__input_shape
 
     @property
-    def start_epoch(self):
+    def get_start_epoch(self):
         return self.__current_epoch
 
     @property
     def is_first_run(self):
         return self.__first_run
+
+    @property
+    def get_arch(self):
+        return self.__model_arch
 
 
 def new_model_format(model_arch: str, model_name: str, input_shape: Tuple[int, int, int]):

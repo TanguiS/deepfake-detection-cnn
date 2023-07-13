@@ -1,6 +1,7 @@
+import base64
 import math
 from pathlib import Path
-from typing import List
+from typing import List, Union
 
 import cv2
 import numpy as np
@@ -24,11 +25,16 @@ def pre_processing_image(
     return cropped_image
 
 
-def extract_face(image_path: Path, face_detector_model: YuNet, max_shape: int = 112) -> ndarray:
-    image_cv2_probe = cv2.imread(str(image_path))
+def extract_face(image_path_or_base64: Union[str, Path], face_detector_model: YuNet, max_shape: int = 112) -> ndarray:
+    image_cv2_probe = read_image(image_path_or_base64)
     image_cv2_probe_resized, ratio_value_probe = rezize_from_max_length(image_cv2_probe, max_shape)
     face_detection: FaceDetectorResult = face_detection_single_frame(image_cv2_probe_resized, face_detector_model)
     return pre_processing_image(face_detection, image_cv2_probe, ratio_value_probe, max_shape)
 
 
-
+def read_image(image_path_or_base64: Union[str, Path]) -> ndarray:
+    if isinstance(image_path_or_base64, Path):
+        return cv2.imread(str(image_path_or_base64))
+    image_bytes = base64.b64decode(image_path_or_base64)
+    image_array = np.frombuffer(image_bytes, np.uint8)
+    return cv2.imdecode(image_array, cv2.IMREAD_COLOR)

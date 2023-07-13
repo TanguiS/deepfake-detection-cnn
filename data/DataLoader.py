@@ -3,7 +3,7 @@ from typing import Tuple
 
 import pandas as pd
 from pandas import DataFrame
-from tensorflow.keras.applications import vgg19, xception, efficientnet
+from tensorflow.keras.applications import resnet_v2, xception, efficientnet
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 from log_io.logger import Logger
@@ -46,12 +46,7 @@ class DataLoader:
         df_train, df_val, df_test = self.__initialize_dataframes(dataframe_pickle, distribution, seed)
         preprocess_func = None
 
-        if arch == 'VGG19':
-            preprocess_func = vgg19.preprocess_input
-        elif arch == 'Xception':
-            preprocess_func = xception.preprocess_input
-        elif arch == 'EfficientNetB4':
-            preprocess_func = efficientnet.preprocess_input
+        preprocess_func = get_preprocess_function(arch)
 
         if preprocess_func is None:
             raise ValueError(f"Given arch is not valid : {arch}")
@@ -171,3 +166,13 @@ def balance_dataframe(dataframe: DataFrame) -> DataFrame:
     balanced_dataframe = pd.concat([majority_class_data, balanced_minority_class_data])
 
     return balanced_dataframe
+
+
+def get_preprocess_function(model_arch: str):
+    if model_arch == 'ResNet152V2':
+        return resnet_v2.preprocess_input
+    elif model_arch == 'Xception':
+        return xception.preprocess_input
+    elif model_arch == 'EfficientNetB4':
+        return efficientnet.preprocess_input
+    raise NotImplementedError(f"This architecture is not implemented: {model_arch}")
