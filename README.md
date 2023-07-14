@@ -26,7 +26,7 @@ $ python3 -m pip install nvidia-cudnn-cu11==8.6.0.163 tensorflow==2.11.*
 ```
 
 - Create or Download Datasets: No datasets are provided with this project, here are the prerequisites to have a usable dataset with this project:
-  - Images / Frames should be in a *root* directory (no specified tree) and the faces must be pre-extracted.
+  - Images / Frames should be in a *root* directory (no specified tree) and the faces must be pre-extracted, [my-extraction-method](./bench/extract/face) using YuNet program.
   - The frames referencing must be made by a ***dataframe*** with pandas' pickle ext format.
   - **dataframe** mandatory content: 
     - Relative path to the frames in relation to the *root* directory as the index of the dataframe.
