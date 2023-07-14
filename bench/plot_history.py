@@ -5,11 +5,12 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import pandas as pd
 
-from models import base_model
+import models.util
+from models import ModelBase
 
 
 def plot_training_results(train_csv_path: Path, val_csv_path: Path) -> None:
-    arch, _, shape = base_model.decode_model_name(train_csv_path.stem)
+    arch, _, shape = models.util.decode_model_name(train_csv_path.stem)
     plot_train_history(train_csv_path, arch, shape)
     plot_val_history(val_csv_path, arch, shape)
 

@@ -2,8 +2,6 @@ from pathlib import Path
 from typing import Dict, Tuple, Optional
 
 import argparser
-from bench.plot_history import plot_training_results
-import tensorflow as tf
 
 
 def decode_trainer_args(args: Dict[str, any]):
@@ -35,6 +33,8 @@ def launch_train(
         seed: int,
         model_name: Optional[str]
 ) -> None:
+    from config import config
+    config.gpu_config()
     workspace = output_folder.joinpath(arch)
     workspace.mkdir(exist_ok=True)
     logger = Logger(workspace)
@@ -66,6 +66,7 @@ def decode_plot_args(args: Dict[str, any]):
 
 
 def launch_plot(train_csv_path: Path, val_csv_path: Path) -> None:
+    from bench.plot_history import plot_training_results
     plot_training_results(train_csv_path, val_csv_path)
 
 
@@ -80,13 +81,6 @@ def decode_shape(shape: int, grayscale: bool):
 
 
 if __name__ == '__main__':
-    gpus = tf.config.experimental.list_physical_devices('GPU')
-    for gpu in gpus:
-        tf.config.experimental.set_memory_growth(gpu, True)
-    conf = tf.config.list_physical_devices('GPU')
-
-    print(conf)
-
     from log_io.logger import Logger
     from models import ModelBase
     from train.Trainer import Trainer

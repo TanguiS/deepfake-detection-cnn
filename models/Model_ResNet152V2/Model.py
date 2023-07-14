@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 import tensorflow
 from tensorflow.keras.applications import resnet_v2
 
-from models.base_model import ModelBase
+from models.ModelBase import ModelBase
 
 
 class ResNet152V2(ModelBase, ABC):

@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 import tensorflow
 from tensorflow.keras.applications import xception
 
-from models.base_model import ModelBase
+from models.ModelBase import ModelBase
 
 
 class Xception(ModelBase, ABC):

@@ -3,8 +3,11 @@ from tensorflow.keras.callbacks import CallbackList
 from data.DataLoader import DataLoader
 from log_io.logger import Logger
 from models import ModelBase
-from train.Callbacks import ModelStateCheckpoint, TrainingProgressBar, CustomEarlyStopping, CustomReduceLROnPlateau, \
-    CustomCSVLogger
+from train.callback.ModelStateCheckpoint import ModelStateCheckpoint
+from train.callback.TrainingProgressBar import TrainingProgressBar
+from train.callback.EarlyStoppingWithLog import EarlyStoppingWithLog
+from train.callback.ReduceLROnPlateauWithLog import ReduceLROnPlateauWithLog
+from train.callback.CSVHistoryLogger import CSVHistoryLogger
 
 
 class Trainer:
@@ -22,14 +25,14 @@ class Trainer:
         filepath = self.__model.get_keras_model_path
         optimizer_callback = ModelStateCheckpoint(filepath=filepath)
         progress_bar = TrainingProgressBar()
-        early_stop = CustomEarlyStopping(
+        early_stop = EarlyStoppingWithLog(
             monitor='val_accuracy',
             min_delta=0,
             patience=10,
             verbose=1,
             mode='auto'
         )
-        learning_rate_reduction = CustomReduceLROnPlateau(
+        learning_rate_reduction = ReduceLROnPlateauWithLog(
             monitor='val_accuracy',
             patience=2,
             verbose=1,
@@ -43,9 +46,9 @@ class Trainer:
             append = False
         if self.__model.is_first_run:
             append = False
-        train_csv_save = CustomCSVLogger(filepath, separator=';', append=append)
+        train_csv_save = CSVHistoryLogger(filepath, separator=';', append=append)
         filepath = self.__model.get_workspace_path.joinpath(f"{name}_val_history.csv")
-        val_csv_save = CustomCSVLogger(filepath, separator=';', append=append, monitor_val=True)
+        val_csv_save = CSVHistoryLogger(filepath, separator=';', append=append, monitor_val=True)
 
         self.__callbacks = [
             optimizer_callback, progress_bar, early_stop, learning_rate_reduction, train_csv_save, val_csv_save

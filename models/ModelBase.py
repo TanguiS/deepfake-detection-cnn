@@ -1,13 +1,13 @@
 import pickle
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Tuple, Dict, Optional, Union
+from typing import Tuple, Optional, Union
 
 from tensorflow.keras import optimizers
 from tensorflow.keras.models import Model, load_model, Sequential
 
 from log_io import logger
-from log_io.logger import Logger
+from models.util import new_model_format, decode_model_name, find_models, choose_models, model_first_run_choose_name
 
 
 # Model name format : {models arch}_{model-name}_{dim: xy_channel}.*
@@ -83,11 +83,11 @@ class ModelBase(ABC):
             self.__optimizer = d['optimizer']
         self.__log.info("Asset loaded.")
 
-    def compile(self) -> None:
+    def compile(self, learning_rate=1e-5) -> None:
         if self.__optimizer is None:
             self.__log.info("Using new optimizer.")
             self.__model.compile(loss=self.__get_losses_metric__(),
-                                 optimizer=optimizers.Adam(learning_rate=1e-5),
+                                 optimizer=optimizers.Adam(learning_rate=learning_rate),
                                  metrics=['accuracy'])
             return
         self.__log.info(f"Loading optimizer and previous state from {self.__optimizer}")
@@ -163,79 +163,3 @@ class ModelBase(ABC):
     def get_arch(self):
         return self.__model_arch
 
-
-def new_model_format(model_arch: str, model_name: str, input_shape: Tuple[int, int, int]):
-    return "_".join([model_arch, model_name, f"{input_shape[0]}_{input_shape[2]}"])
-
-
-def model_name_from_path(model_path: Path) -> str:
-    model_stem = model_path.stem
-    arch, name, shape = decode_model_name(model_stem)
-    model_name = new_model_format(arch, name, shape)
-    return model_name
-
-
-def decode_model_name(model_name_stem: str) -> Tuple[str, str, Tuple[int, int, int]]:
-    split = model_name_stem.split("_")
-    arch = split[0]
-    str_split_dim = [split[2], split[3]]
-    shape = (int(str_split_dim[0]), int(str_split_dim[0]), int(str_split_dim[1]))
-    name = split[1]
-    return arch, name, shape
-
-
-def find_models(model_dir: Path, model_arch: str) -> Dict[int, str]:
-    models = dict()
-    curr_index = 0
-    for name in model_dir.rglob(f"{model_arch}*"):
-        if name.suffix == ".h5" or name.suffix == ".tf" or name.suffix == ".keras":
-            models[curr_index] = name.stem
-            curr_index += 1
-    return models
-
-
-def choose_models(available_models: Dict[int, str], model_dir: Path) -> Optional[Path]:
-    if not available_models:
-        return None
-
-    log = Logger()
-
-    log.info(" -- Choose a Model --")
-    for index, name in available_models.items():
-        log.info(f"  -> [{index}]: {name}")
-
-    default_choice = 0
-    log.info(f"Enter your models index choice (default: {default_choice}), enter -1 to create a new model")
-    user_input = input(" > ")
-
-    try:
-        choice = int(user_input)
-    except ValueError as e:
-        log.err(str(e))
-        log.info(f"New models selected, name : {user_input}.")
-        log.info("Choice not an integer. Using default choice.")
-        log.err("Choice not an integer. Using default choice.")
-        choice = default_choice
-
-    if choice == -1:
-        return None
-
-    if choice < 0 or choice >= len(available_models):
-        log.info("Choice out of range. Using default choice.")
-        log.err("Choice out of range. Using default choice.")
-        choice = default_choice
-
-    selected_model = available_models[choice]
-    selected_model = [model for model in model_dir.rglob(f"*{selected_model}*")][0]
-
-    return selected_model
-
-
-def model_first_run_choose_name() -> str:
-    log = Logger()
-
-    default_choice = "deepfake-detection"
-    log.info(" -- First Time: Choose a model name --")
-    log.info(f"Enter your model name (default: {default_choice}) ")
-    user_input = input(" > ")
-    return user_input

@@ -1,4 +1,4 @@
-from models.base_model import ModelBase
+from models.ModelBase import ModelBase
 
 
 def import_model(model_class_name):
