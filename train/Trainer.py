@@ -1,13 +1,11 @@
-from tensorflow.keras.callbacks import CallbackList
-
 from data.DataLoader import DataLoader
 from log_io.logger import Logger
 from models import ModelBase
-from train.callback.ModelStateCheckpoint import ModelStateCheckpoint
-from train.callback.TrainingProgressBar import TrainingProgressBar
-from train.callback.EarlyStoppingWithLog import EarlyStoppingWithLog
-from train.callback.ReduceLROnPlateauWithLog import ReduceLROnPlateauWithLog
 from train.callback.CSVHistoryLogger import CSVHistoryLogger
+from train.callback.EarlyStoppingWithLog import EarlyStoppingWithLog
+from train.callback.ModelStateCheckpoint import ModelStateCheckpoint
+from train.callback.ReduceLROnPlateauWithLog import ReduceLROnPlateauWithLog
+from train.callback.TrainingProgressBar import TrainingProgressBar
 
 
 class Trainer:

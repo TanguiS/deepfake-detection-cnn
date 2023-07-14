@@ -44,7 +44,6 @@ class DataLoader:
     ) -> Tuple[ImageDataGenerator, ImageDataGenerator, ImageDataGenerator]:
 
         df_train, df_val, df_test = self.__initialize_dataframes(dataframe_pickle, distribution, seed)
-        preprocess_func = None
 
         preprocess_func = get_preprocess_function(arch)
 
