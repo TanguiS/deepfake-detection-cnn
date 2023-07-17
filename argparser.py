@@ -2,6 +2,8 @@ import argparse
 from pathlib import Path
 from typing import Dict, Union
 
+from models.available_arch import models_arch
+
 
 def args_parser() -> Dict[str, any]:
     parser = argparse.ArgumentParser(
@@ -21,7 +23,7 @@ def args_parser() -> Dict[str, any]:
 def train_action_parser(subparsers):
     parser = subparsers.add_parser("train", help="Train a model or resume a training.")
 
-    parser.add_argument("--arch", choices=["ResNet152V2", "Xception", "EfficientNetB4"], required=True,
+    parser.add_argument("--arch", choices=models_arch, required=True,
                         help="Choice an available architecture model.")
     parser.add_argument("-root", "--root_face_folder", type=Path, required=True,
                         help="Path to the folder that contains all the faces.")
@@ -47,7 +49,13 @@ def train_action_parser(subparsers):
 def plot_history_parser(subparsers):
     parser = subparsers.add_parser("plot", help="Plot the history saved from the csv files.")
 
-    parser.add_argument("-t", "--train_history_csv_path", required=True,
-                        help="Path to the train history csv file generated during training")
-    parser.add_argument("-v", "--validation_history_csv_path", required=True,
-                        help="Path to the validation history csv file generated during training")
+    parser.add_argument("--arch", choices=models_arch, required=True,
+                        help="Choice an available architecture model.")
+    parser.add_argument("-root", "--root_face_folder", type=Path, required=True,
+                        help="Path to the folder that contains all the faces.")
+    parser.add_argument("-m", "--model_name", type=str, default=None, required=False, help="Name of the model to "
+                                                                                           "create or to resume "
+                                                                                           "training, "
+                                                                                           "if not provided, "
+                                                                                           "will be ask to choose.")
+

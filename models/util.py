@@ -66,7 +66,7 @@ def choose_models(available_models: Dict[int, str], model_dir: Path) -> Optional
         choice = default_choice
 
     selected_model = available_models[choice]
-    selected_model = [model for model in model_dir.rglob(f"*{selected_model}*")][0]
+    selected_model = [model for model in model_dir.rglob(f"*{selected_model}*.keras")][0]
 
     return selected_model
 

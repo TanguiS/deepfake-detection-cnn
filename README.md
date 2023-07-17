@@ -14,12 +14,12 @@ $ pip install -r requirments.txt
 ```
 
 - **Warning**: You should install *TensorFlow* manually to install the proper binary file for your system and then the requirements. Ex :
-- **ROCM**: [compatibility](https://github.com/ROCmSoftwarePlatform/tensorflow-upstream/blob/develop-upstream/rocm_docs/tensorflow-rocm-release.md)
+- **ROCM**: ([compatibility](https://github.com/ROCmSoftwarePlatform/tensorflow-upstream/blob/develop-upstream/rocm_docs/tensorflow-rocm-release.md))
 ```bash
 # My version: 
 $ pip install tensorflow-rocm==2.11.0.540
 ```
-- **CUDA**:
+- **CUDA**: ([tensorflow-official](https://www.tensorflow.org/install/pip?hl=fr))
 ```bash
 $ conda install -c conda-forge cudatoolkit=11.8.0
 $ python3 -m pip install nvidia-cudnn-cu11==8.6.0.163 tensorflow==2.11.*
@@ -61,6 +61,22 @@ $ HSA_OVERRIDE_GFX_VERSION=10.3.0
 # Run command:
 $ python main.py train --arch EfficientNetB4 -root $ROOT_DATASET_PATH -df $DF_DATASET_PATH -o ./log -s 41 -d 70-20-10 --shape 256 -epoch 100 -b 8 -m latest
 ```
+
+### Plot Training History Run Command Example on EfficientNetB4
+
+```bash
+$ conda activate dd-cnn
+
+# Args:
+$ python main.py plot -h
+
+# Path to the '.log' directory previously created in the above example
+$ MODELS_LOG_DIR=/path/to/your/models/dir
+
+$ python main.py plot -root "./log" --arch "EfficientNetB4" -m "latest"
+```
+
+Good to know: It does not save the graph.
 
 ### Evaluation Run Command Example on EfficientNetB4
 

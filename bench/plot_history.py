@@ -1,15 +1,39 @@
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Optional
 
-import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
 import pandas as pd
 
 import models.util
-from models import ModelBase
+from models import util
 
 
-def plot_training_results(train_csv_path: Path, val_csv_path: Path) -> None:
+def find_history_csv(models_dir: Path, model_arch: str, model_name: Optional[str]) -> Tuple[Path, Path]:
+    model_stem = get_model(model_arch, model_name, models_dir)
+    return models_dir.joinpath(model_arch).joinpath(f"{model_stem}_train_history.csv"), \
+           models_dir.joinpath(model_arch).joinpath(f"{model_stem}_val_history.csv")
+
+
+def get_model(model_arch, model_name, models_dir):
+    available_models = util.find_models(models_dir, model_arch)
+    if len(available_models) == 0:
+        raise ValueError
+    model_stem = None
+    if model_name is None:
+        model_stem = util.choose_models(available_models, models_dir).stem
+    else:
+        for key, value in available_models.items():
+            if util.decode_model_name(value)[1] == model_name:
+                model_stem = value
+                break
+    if model_stem is None:
+        raise ValueError
+    return model_stem
+
+
+def plot_training_results(models_dir: Path, model_arch: str, model_name: Optional[str]) -> None:
+    train_csv_path, val_csv_path = find_history_csv(models_dir, model_arch, model_name)
     arch, _, shape = models.util.decode_model_name(train_csv_path.stem)
     plot_train_history(train_csv_path, arch, shape)
     plot_val_history(val_csv_path, arch, shape)
