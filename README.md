@@ -8,7 +8,7 @@
 - Environment creation :
 
 ```bash
-$ conda create env -n dd-cnn python=3.8
+$ conda create -n dd-cnn python=3.8
 $ conda activate dd-cnn
 $ pip install -r requirments.txt
 ```

@@ -5,7 +5,7 @@ import models
 from data.DataLoader import DataLoader
 from log_io.logger import Logger
 
-from util import decode_shape
+from main_launcher.util import decode_shape
 from models import ModelBase
 from train.Trainer import Trainer
 
@@ -39,8 +39,6 @@ def launch_train(
         seed: int,
         model_name: Optional[str]
 ) -> None:
-    from config import config
-    config.gpu_config()
     workspace = output_folder.joinpath(arch)
     workspace.mkdir(exist_ok=True)
     logger = Logger(workspace)
