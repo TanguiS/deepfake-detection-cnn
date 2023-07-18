@@ -13,15 +13,13 @@ from models.util import new_model_format, decode_model_name, find_models, choose
 # Model name format : {models arch}_{model-name}_{dim: xy_channel}.*
 
 class ModelBase(ABC):
-    def __init__(self, models_dir: Path, model_arch: str, input_shape: Tuple[int, int, int], nb_epoch: int,
-                 batch_size: int = 32, model_name: Optional[str] = None) -> None:
+    def __init__(self, models_dir: Path, model_arch: str, input_shape: Tuple[int, int, int],
+                 model_name: Optional[str] = None) -> None:
         super().__init__()
 
         self.__optimizer = None
         self.__model: Optional[Model] = None
         self.__input_shape = input_shape
-        self.__nb_epoch = nb_epoch
-        self.__batch_size = batch_size
         self.__models_dir = models_dir
         self.__model_arch = model_arch
         self.__first_run = False

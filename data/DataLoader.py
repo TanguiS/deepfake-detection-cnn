@@ -3,8 +3,6 @@ from typing import Tuple
 
 import pandas as pd
 from pandas import DataFrame
-from tensorflow.keras.applications import resnet_v2, xception, efficientnet
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 from log_io.logger import Logger
 
@@ -41,7 +39,8 @@ class DataLoader:
             arch: str,
             seed: int,
             distribution: str
-    ) -> Tuple[ImageDataGenerator, ImageDataGenerator, ImageDataGenerator]:
+    ) -> Tuple:
+        from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
         df_train, df_val, df_test = self.__initialize_dataframes(dataframe_pickle, distribution, seed)
 
@@ -168,6 +167,8 @@ def balance_dataframe(dataframe: DataFrame) -> DataFrame:
 
 
 def get_preprocess_function(model_arch: str):
+    from tensorflow.keras.applications import resnet_v2, xception, efficientnet
+
     if model_arch == 'ResNet152V2':
         return resnet_v2.preprocess_input
     elif model_arch == 'Xception':

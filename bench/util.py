@@ -4,16 +4,18 @@ from typing import Tuple, List, Union
 from bench.Evaluation import ModelEvaluator
 
 
-def decode_prediction(prediction) -> Tuple[str, float]:
-    label = 'Real'
-    if prediction[0][0] <= 0.5:
-        label = 'Fake'
-    confidence = (abs(prediction[0][0] - 0.5) * 100) / 0.5
-    return label, confidence
-
-
 def is_prediction_deepfake(prediction) -> bool:
-    return prediction[0][0] <= 0.5
+    return prediction[0][0] > prediction[0][1]
+
+
+def major_prediction_to_percentage(prediction) -> float:
+    if is_prediction_deepfake(prediction):
+        return float(int(prediction[0][0] * 10000)) / 10
+    return float(int(prediction[0][1] * 10000)) / 10
+
+
+def decode_prediction(prediction) -> Tuple[str, float]:
+    return 'Fake' if is_prediction_deepfake(prediction) else 'Real', major_prediction_to_percentage(prediction)
 
 
 def predict_list(evaluator: ModelEvaluator, list_frame_path_or_base64: List[Union[str, Path]]):
@@ -26,11 +28,7 @@ def predict_list(evaluator: ModelEvaluator, list_frame_path_or_base64: List[Unio
 def decode_predictions_list(predictions: List) -> List[Tuple[str, float]]:
     decoded_pred = []
     for prediction in predictions:
-        label = 'Real'
-        if prediction[0][0] <= 0.5:
-            label = 'Fake'
-        confidence = (abs(prediction[0][0] - 0.5) * 100) / 0.5
-        decoded_pred.append((label, confidence))
+        decoded_pred.append(decode_prediction(prediction))
     return decoded_pred
 
 

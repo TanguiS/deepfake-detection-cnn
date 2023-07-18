@@ -59,7 +59,15 @@ $ python main.py train -h
 $ HSA_OVERRIDE_GFX_VERSION=10.3.0
 
 # Run command:
-$ python main.py train --arch EfficientNetB4 -root $ROOT_DATASET_PATH -df $DF_DATASET_PATH -o ./log -s 41 -d 70-20-10 --shape 256 -epoch 100 -b 8 -m latest
+$ python main.py train --arch "EfficientNetB4" \
+-root $ROOT_DATASET_PATH \
+-df $DF_DATASET_PATH \
+-o "./log" \
+-s 41 \
+-d "70-20-10" \
+--shape 256 \
+-epoch 100 \
+-b 8
 ```
 
 ### Plot Training History Run Command Example on EfficientNetB4
@@ -76,11 +84,33 @@ $ MODELS_LOG_DIR=/path/to/your/models/dir
 $ python main.py plot -root "./log" --arch "EfficientNetB4" -m "latest"
 ```
 
-Good to know: It does not save the graph.
+Good to know: It does not save the graphs.
 
 ### Evaluation Run Command Example on EfficientNetB4
 
-Not done yet.
+```bash
+$ conda activate dd-cnn
+
+# Args:
+$ python main.py eval -h
+
+# Specify the necessaries path:
+# Path to the '.log' directory previously created in the above example
+$ MODELS_LOG_DIR=/path/to/your/models/dir
+$ ROOT_DATASET_PATH=/path/to/your/dataset/folder
+$ DF_DATASET_PATH=/path/to/your/dataframe.pkl
+# Path to the YuNet face extraction model (This is the algorithm I used to extract the faces, feel free to change)
+$ YUNET_MODEL_PATH=/path/to/your/yunet_model.onnx
+
+$ python main.py eval --shape 256 \
+-r $ROOT_DATASET_PATH \
+-df $DF_DATASET_PATH \
+-o $MODELS_LOG_DIR \
+--arch "EfficientNetB4" \
+--seed 41 \
+-d "70-20-10" \
+-yunet $YUNET_MODEL_PATH
+```
 
 ### Results Example:
 

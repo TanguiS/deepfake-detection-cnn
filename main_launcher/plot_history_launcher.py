@@ -13,4 +13,5 @@ def decode_plot_args(args: Dict[str, any]):
 
 def launch_plot(models_dir: Path, model_arch: str, model_name: Optional[str]) -> None:
     from bench.plot_history import plot_training_results
+
     plot_training_results(models_dir, model_arch, model_name)

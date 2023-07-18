@@ -31,6 +31,7 @@ class ModelEvaluator:
         )
         preprocess_func = get_preprocess_function(self.__model.get_arch)
         preprocessed_frame = preprocess_func(extracted_frame)
-        yhat = self.__model.get_keras_model.predict(preprocessed_frame)
+        batched_frame = np.expand_dims(preprocessed_frame, axis=0)
+        yhat = self.__model.get_keras_model.predict(batched_frame, verbose=0)
         return yhat
 
