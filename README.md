@@ -112,9 +112,14 @@ $ python main.py eval --shape 256 \
 -yunet $YUNET_MODEL_PATH
 ```
 
-### Results Example:
+### Results Example on EfficientNetB4:
 
-Not done yet.
+<p align='center'>
+  <img src='./resources/graphs/training_history_latest.png' alt="Training History Graph On EfficientNetB4" width="500"/>
+  <img src='./resources/graphs/val_history_latest.png' alt="Training History Graph On EfficientNetB4" width="500"/>
+  <img src='./resources/graphs/confusion_matrix_latest.png' alt="Training History Graph On EfficientNetB4" height="500"/>
+</p>
+
 
 ## Credits
 

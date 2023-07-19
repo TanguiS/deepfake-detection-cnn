@@ -1,12 +1,10 @@
 import base64
-import math
 from pathlib import Path
-from typing import List, Union
+from typing import Union
 
 import cv2
 import numpy as np
 from numpy import ndarray
-from tqdm import tqdm
 
 from bench.extract.face import FaceDetectorResult
 from bench.extract.face.FaceDetectorResult import face_detection_single_frame
