@@ -105,11 +105,11 @@ class DataLoader:
             f"for testing with seed : {seed}"
         )
 
-        test_dataframe = dataframe.sample(n=test_amount, random_state=seed)
-        dataframe = dataframe.drop(test_dataframe.index)
-
         evaluation_dataframe = dataframe.sample(n=val_amount, random_state=seed)
         dataframe = dataframe.drop(evaluation_dataframe.index)
+
+        test_dataframe = dataframe.sample(n=test_amount, random_state=seed)
+        dataframe = dataframe.drop(test_dataframe.index)
 
         training_dataframe = dataframe.sample(n=train_amount, random_state=seed)
 

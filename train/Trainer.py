@@ -26,7 +26,7 @@ class Trainer:
         early_stop = EarlyStoppingWithLog(
             monitor='val_accuracy',
             min_delta=0,
-            patience=10,
+            patience=4,
             verbose=1,
             mode='auto'
         )
