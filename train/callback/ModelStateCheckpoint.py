@@ -1,8 +1,8 @@
 import pickle
 from pathlib import Path
 
-from keras import Model
-from keras.callbacks import Callback
+from tensorflow.keras import Model
+from tensorflow.keras.callbacks import Callback
 
 from log_io.logger import Logger
 

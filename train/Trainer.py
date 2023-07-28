@@ -7,6 +7,8 @@ from train.callback.ModelStateCheckpoint import ModelStateCheckpoint
 from train.callback.ReduceLROnPlateauWithLog import ReduceLROnPlateauWithLog
 from train.callback.TrainingProgressBar import TrainingProgressBar
 
+from tensorflow.keras.callbacks import ModelCheckpoint
+
 
 class Trainer:
     def __init__(self, model: ModelBase, data_loader: DataLoader, batch_size: int = 32) -> None:
@@ -22,6 +24,9 @@ class Trainer:
     def __setup_callbacks(self):
         filepath = self.__model.get_keras_model_path
         optimizer_callback = ModelStateCheckpoint(filepath=filepath)
+        filepath = str(filepath)
+        filepath = filepath[:-6] + ".{epoch:02d}.keras"
+        model_checkpoint = ModelCheckpoint(filepath=filepath)
         progress_bar = TrainingProgressBar()
         early_stop = EarlyStoppingWithLog(
             monitor='val_accuracy',
@@ -49,7 +54,8 @@ class Trainer:
         val_csv_save = CSVHistoryLogger(filepath, separator=';', append=append, monitor_val=True)
 
         self.__callbacks = [
-            optimizer_callback, progress_bar, early_stop, learning_rate_reduction, train_csv_save, val_csv_save
+            optimizer_callback, progress_bar, early_stop, learning_rate_reduction, train_csv_save, val_csv_save,
+            model_checkpoint
         ]
 
     def run(self, max_epochs: int = 10):

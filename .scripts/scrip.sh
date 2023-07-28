@@ -1,10 +1,11 @@
 SUBJECT_ROOT=/media/tangui/CA1EF5E61EF5CC07/ubuntu_drive/DeepFaceLab_data/my_data/subjects
 SUBJECT_DF=/media/tangui/CA1EF5E61EF5CC07/ubuntu_drive/DeepFaceLab_data/my_data/subjects/dataframe.pkl
+LOG_DIR=/media/tangui/CA1EF5E61EF5CC07/ubuntu_drive/DeepFaceLab_data/my_data/cnn_model/
 
 python main.py train --arch "Xception" \
 -root $SUBJECT_ROOT \
 -df $SUBJECT_DF \
--o "./log" \
+-o $LOG_DIR \
 -s 41 \
 -d "85-10-5" \
 --shape 256 \
@@ -15,7 +16,7 @@ python main.py train --arch "Xception" \
 python main.py train --arch "EfficientNetB4" \
 -root $SUBJECT_ROOT \
 -df $SUBJECT_DF \
--o "./log" \
+-o $LOG_DIR \
 -s 41 \
 -d "85-10-5" \
 --shape 256 \
@@ -26,7 +27,7 @@ python main.py train --arch "EfficientNetB4" \
 python main.py train --arch "ResNet152V2" \
 -root $SUBJECT_ROOT \
 -df $SUBJECT_DF \
--o "./log" \
+-o $LOG_DIR \
 -s 41 \
 -d "85-10-5" \
 --shape 256 \
